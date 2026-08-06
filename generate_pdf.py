@@ -1,8 +1,8 @@
 """
-PDF Generator for Department Research Proposal
-===============================================
-Generates a beautifully styled, professional academic PDF from RESEARCH_PROPOSAL.md
-using ReportLab.
+Publication-Grade PDF Generator for Department Research Proposal
+================================================================
+Generates an executive, highly polished, graphical academic PDF for the proposal.
+Eliminates all raw text artifacts and replaces code diagrams with clean ReportLab Flowables.
 """
 
 import os
@@ -13,14 +13,14 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, KeepTogether
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from reportlab.pdfgen import canvas
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 MD_PATH = os.path.join(PROJECT_ROOT, "RESEARCH_PROPOSAL.md")
 PDF_PATH = os.path.join(PROJECT_ROOT, "RESEARCH_PROPOSAL.pdf")
 
-# Page Numbering Canvas
+# Custom Canvas for Header/Footer & Page Numbering
 class NumberedCanvas(canvas.Canvas):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,26 +40,113 @@ class NumberedCanvas(canvas.Canvas):
 
     def draw_page_decorations(self, page_count):
         self.saveState()
-        self.setFont("Helvetica", 8)
-        self.setFillColor(colors.HexColor("#555555"))
+        self.setFont("Helvetica-Bold", 8)
+        self.setFillColor(colors.HexColor("#4A5568"))
         
         # Header (pages 2+)
         if self._pageNumber > 1:
-            self.drawString(43, 755, "Universal AI University — Department of Future Tech | Research Proposal")
-            self.drawRightString(569, 755, "Suryaansh Prithvijit Singh")
-            self.setStrokeColor(colors.HexColor("#CCCCCC"))
-            self.setLineWidth(0.5)
+            self.drawString(43, 755, "UNIVERSAL AI UNIVERSITY — DEPARTMENT OF FUTURE TECH")
+            self.drawRightString(569, 755, "Suryaansh Prithvijit Singh | MSOPT Proposal")
+            self.setStrokeColor(colors.HexColor("#CBD5E0"))
+            self.setLineWidth(0.75)
             self.line(43, 748, 569, 748)
             
         # Footer (all pages)
-        self.setStrokeColor(colors.HexColor("#CCCCCC"))
-        self.setLineWidth(0.5)
-        self.line(43, 45, 569, 45)
+        self.setFont("Helvetica", 8)
+        self.setStrokeColor(colors.HexColor("#CBD5E0"))
+        self.setLineWidth(0.75)
+        self.line(43, 42, 569, 42)
         
-        self.drawString(43, 32, "CONFIDENTIAL — FOR DEPARTMENTAL REVIEW ONLY")
+        self.drawString(43, 28, "CONFIDENTIAL — FOR DEPARTMENTAL REVIEW & FACULTY APPROVAL ONLY")
         page_text = f"Page {self._pageNumber} of {page_count}"
-        self.drawRightString(569, 32, page_text)
+        self.drawRightString(569, 28, page_text)
         self.restoreState()
+
+
+def build_graphical_pipeline(styles):
+    """Build a graphical 6-stage architecture pipeline flowable."""
+    stages = [
+        ("STAGE 1: RAW FINANCIAL MULTIVARIATE SERIES", "Log Returns, Parkinson Volatility, Relative Volume", "#1A365D", "#EBF8FF"),
+        ("STAGE 2: DENSE MULTI-SCALE DILATED RECEPTIVE FIELDS", "Window w in {4, 8, 16, 32}, Dilation d in {1, 2, 4}, Stride s = 1", "#2B6CB0", "#EBF8FF"),
+        ("STAGE 3: THRESHOLDED 1D-SAX SYMBOLIC DISCRETIZATION", "Segment Mean Quantization a_mu + Segment Slope Quantization a_beta", "#2C7A7B", "#E6FFFA"),
+        ("STAGE 4: 2D SCALE-TIME SPATIAL TENSOR MAPPING", "Y-axis = Receptive Field Scale (w,d), X-axis = Time Index t", "#6B46C1", "#FAF5FF"),
+        ("STAGE 5: 2D SPATIAL CONVOLUTION & TRANSFORMER ENCODER", "Position + Scale + Volatility Multi-Dimensional Embeddings", "#2C5282", "#EBF8FF"),
+        ("STAGE 6: DIRECTIONAL THRESHOLD & REGIME CLASSIFICATION", "High-SNR Target Formulation (Directional Move +-0.5 Vol & Vol Regimes)", "#22543D", "#F0FFF4"),
+    ]
+    
+    flowables = []
+    
+    for i, (title, desc, header_color, bg_color) in enumerate(stages):
+        title_p = Paragraph(f"<b>{title}</b>", ParagraphStyle(f'ST_{i}', fontName='Helvetica-Bold', fontSize=8.5, leading=11, textColor=colors.white))
+        desc_p = Paragraph(desc, ParagraphStyle(f'SD_{i}', fontName='Helvetica', fontSize=8, leading=11, textColor=colors.HexColor("#2D3748")))
+        
+        card_table = Table([[title_p], [desc_p]], colWidths=[510])
+        card_table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (0,0), colors.HexColor(header_color)),
+            ('BACKGROUND', (0,1), (0,1), colors.HexColor(bg_color)),
+            ('PADDING', (0,0), (-1,-1), 4),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('BOX', (0,0), (-1,-1), 1, colors.HexColor(header_color)),
+        ]))
+        
+        flowables.append(card_table)
+        
+        # Down Arrow Connector (between stages)
+        if i < len(stages) - 1:
+            arrow_p = Paragraph("<b>│<br/>▼</b>", ParagraphStyle(f'Arr_{i}', fontName='Helvetica-Bold', fontSize=9, leading=9, textColor=colors.HexColor("#4A5568"), alignment=TA_CENTER))
+            flowables.append(Spacer(1, 1))
+            flowables.append(arrow_p)
+            flowables.append(Spacer(1, 1))
+            
+    return KeepTogether(flowables)
+
+
+def build_graphical_timeline(styles):
+    """Build a graphical 4-phase roadmap table."""
+    title_style = ParagraphStyle('THead', fontName='Helvetica-Bold', fontSize=8.5, leading=11, textColor=colors.white)
+    badge_style = ParagraphStyle('TBadge', fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.white, alignment=TA_CENTER)
+    cell_style = ParagraphStyle('TCell', fontName='Helvetica', fontSize=8, leading=11, textColor=colors.HexColor("#2D3748"))
+    cell_bold = ParagraphStyle('TCellB', fontName='Helvetica-Bold', fontSize=8.5, leading=11, textColor=colors.HexColor("#1A365D"))
+
+    data = [
+        [
+            Paragraph("<b>Phase & Horizon</b>", title_style),
+            Paragraph("<b>Milestones & Key Deliverables</b>", title_style),
+            Paragraph("<b>Status</b>", title_style)
+        ],
+        [
+            Paragraph("<b>PHASE 1</b><br/><font size=7 color='#718096'>Literature & Blueprint</font>", cell_bold),
+            Paragraph("Deep-dive literature knowledge base across 8 core domains (`research_papers/`), formal Department Research Proposal compilation, and workspace agent memory system setup.", cell_style),
+            Paragraph("<font color='#22543D'><b>COMPLETED</b></font>", ParagraphStyle('B1', fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=TA_CENTER))
+        ],
+        [
+            Paragraph("<b>PHASE 2</b><br/><font size=7 color='#718096'>Weeks 1 – 2</font>", cell_bold),
+            Paragraph("Formal mathematical specification of 1D-SAX codebook & 2D scale-time spatial grid. Setup of baseline walk-forward backtest protocol environment.", cell_style),
+            Paragraph("<font color='#2B6CB0'><b>PLANNED</b></font>", ParagraphStyle('B2', fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=TA_CENTER))
+        ],
+        [
+            Paragraph("<b>PHASE 3</b><br/><font size=7 color='#718096'>Weeks 3 – 5</font>", cell_bold),
+            Paragraph("Implementation of MSOPT Tokenizer & 2D Scale-Time Spatial Embedder (`src/tokenizer/`). Controlled ablation studies (MSOPT vs PatchTST vs TS-BPE vs TimesNet vs BORF).", cell_style),
+            Paragraph("<font color='#6B46C1'><b>PLANNED</b></font>", ParagraphStyle('B3', fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=TA_CENTER))
+        ],
+        [
+            Paragraph("<b>PHASE 4</b><br/><font size=7 color='#718096'>Weeks 6 – 8</font>", cell_bold),
+            Paragraph("Walk-forward expanding window cross-asset backtesting (SPY, AAPL, QQQ, TLT) with explicit 5 bps transaction costs. Drafting academic manuscript for top-tier submission.", cell_style),
+            Paragraph("<font color='#1A365D'><b>PLANNED</b></font>", ParagraphStyle('B4', fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=TA_CENTER))
+        ]
+    ]
+
+    roadmap_table = Table(data, colWidths=[110, 316, 100])
+    roadmap_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1A365D")),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('PADDING', (0,0), (-1,-1), 6),
+        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F7FAFC")]),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
+        ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#1A365D")),
+    ]))
+    
+    return KeepTogether(roadmap_table)
 
 
 def build_pdf():
@@ -81,50 +168,21 @@ def build_pdf():
     # Custom Palette
     PRIMARY = colors.HexColor("#1A365D")   # Deep Navy
     SECONDARY = colors.HexColor("#2B6CB0") # Slate Blue
-    ACCENT_RED = colors.HexColor("#C53030")# Crimson
-    TEXT_DARK = colors.HexColor("#2D3748") # Dark Gray
-    BG_LIGHT = colors.HexColor("#F7FAFC")  # Off-white
+    ACCENT_RED = colors.HexColor("#9B2C2C")# Dark Crimson
+    TEXT_DARK = colors.HexColor("#2D3748") # Dark Slate
+    BG_LIGHT = colors.HexColor("#F7FAFC")  # Light Gray
     BG_CALLOUT = colors.HexColor("#FFF5F5")# Soft Red Tint
 
     # Custom Typography Styles
-    title_style = ParagraphStyle(
-        'DocTitle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=20,
-        leading=24,
-        textColor=PRIMARY,
-        alignment=TA_LEFT,
-        spaceAfter=15
-    )
-    
-    meta_label_style = ParagraphStyle(
-        'MetaLabel',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=10,
-        leading=14,
-        textColor=PRIMARY
-    )
-    
-    meta_val_style = ParagraphStyle(
-        'MetaVal',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        leading=14,
-        textColor=TEXT_DARK
-    )
-
     h1_style = ParagraphStyle(
         'Heading1_Custom',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=13,
-        leading=17,
+        fontSize=12,
+        leading=15,
         textColor=PRIMARY,
         spaceBefore=14,
-        spaceAfter=6,
+        spaceAfter=5,
         keepWithNext=True
     )
     
@@ -132,11 +190,11 @@ def build_pdf():
         'Heading2_Custom',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=11,
-        leading=15,
+        fontSize=10,
+        leading=13,
         textColor=SECONDARY,
-        spaceBefore=10,
-        spaceAfter=4,
+        spaceBefore=8,
+        spaceAfter=3,
         keepWithNext=True
     )
 
@@ -144,10 +202,10 @@ def build_pdf():
         'Body_Custom',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=13.5,
+        fontSize=9,
+        leading=13,
         textColor=TEXT_DARK,
-        spaceAfter=6,
+        spaceAfter=5,
         alignment=TA_LEFT
     )
 
@@ -155,8 +213,8 @@ def build_pdf():
         'Bullet_Custom',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=13.5,
+        fontSize=9,
+        leading=13,
         textColor=TEXT_DARK,
         leftIndent=12,
         spaceAfter=3
@@ -166,20 +224,20 @@ def build_pdf():
         'CalloutTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=12,
-        leading=15,
+        fontSize=11,
+        leading=14,
         textColor=ACCENT_RED,
-        spaceAfter=6
+        spaceAfter=4
     )
 
     callout_body_style = ParagraphStyle(
         'CalloutBody',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=9,
-        leading=13,
+        fontSize=8.5,
+        leading=12,
         textColor=colors.HexColor("#742A2A"),
-        spaceAfter=4
+        spaceAfter=3
     )
 
     table_header_style = ParagraphStyle(
@@ -205,26 +263,26 @@ def build_pdf():
 
     # Parse Header Metadata
     story.append(Paragraph("UNIVERSAL AI UNIVERSITY", ParagraphStyle('InstHeader', fontName='Helvetica-Bold', fontSize=10, textColor=SECONDARY, leading=12, spaceAfter=2)))
-    story.append(Paragraph("DEPARTMENT OF FUTURE TECH — RESEARCH PROPOSAL", ParagraphStyle('DeptSub', fontName='Helvetica-Bold', fontSize=12, textColor=PRIMARY, leading=15, spaceAfter=8)))
-    story.append(HRFlowable(width="100%", thickness=2, color=PRIMARY, spaceBefore=0, spaceAfter=12))
+    story.append(Paragraph("DEPARTMENT OF FUTURE TECH — RESEARCH PROPOSAL", ParagraphStyle('DeptSub', fontName='Helvetica-Bold', fontSize=12, textColor=PRIMARY, leading=15, spaceAfter=6)))
+    story.append(HRFlowable(width="100%", thickness=2, color=PRIMARY, spaceBefore=0, spaceAfter=10))
 
     # Metadata Table Block
     meta_data = [
-        [Paragraph("Project Title:", meta_label_style), Paragraph("Multi-Scale Overlapping Pattern Tokenization (MSOPT) for Non-Stationary Financial Time Series", meta_val_style)],
-        [Paragraph("Lead Researcher:", meta_label_style), Paragraph("<b>Suryaansh Prithvijit Singh</b> (Universal AI University)", meta_val_style)],
-        [Paragraph("Faculty Guide:", meta_label_style), Paragraph("<b>Prof. Shivaji Pawar</b>, Faculty Guide / Supervisor, Dept. of Future Tech", meta_val_style)],
-        [Paragraph("Date & Status:", meta_label_style), Paragraph("August 2026 | Proposal Pending Formal Department Approval", meta_val_style)],
+        [Paragraph("Project Title:", ParagraphStyle('ML', fontName='Helvetica-Bold', fontSize=9, leading=12, textColor=PRIMARY)), Paragraph("Multi-Scale Overlapping Pattern Tokenization (MSOPT) for Non-Stationary Financial Time Series", ParagraphStyle('MV', fontName='Helvetica', fontSize=9, leading=12, textColor=TEXT_DARK))],
+        [Paragraph("Lead Researcher:", ParagraphStyle('ML', fontName='Helvetica-Bold', fontSize=9, leading=12, textColor=PRIMARY)), Paragraph("<b>Suryaansh Prithvijit Singh</b> (Universal AI University)", ParagraphStyle('MV', fontName='Helvetica', fontSize=9, leading=12, textColor=TEXT_DARK))],
+        [Paragraph("Faculty Guide:", ParagraphStyle('ML', fontName='Helvetica-Bold', fontSize=9, leading=12, textColor=PRIMARY)), Paragraph("<b>Prof. Shivaji Pawar</b>, Department of Future Tech, Universal AI University", ParagraphStyle('MV', fontName='Helvetica', fontSize=9, leading=12, textColor=TEXT_DARK))],
+        [Paragraph("Date & Status:", ParagraphStyle('ML', fontName='Helvetica-Bold', fontSize=9, leading=12, textColor=PRIMARY)), Paragraph("August 2026 | Proposal Pending Formal Department Approval", ParagraphStyle('MV', fontName='Helvetica', fontSize=9, leading=12, textColor=TEXT_DARK))],
     ]
     meta_table = Table(meta_data, colWidths=[100, 426])
     meta_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), BG_LIGHT),
-        ('PADDING', (0,0), (-1,-1), 5),
+        ('PADDING', (0,0), (-1,-1), 4),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor("#E2E8F0")),
         ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
     ]))
     story.append(meta_table)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
 
     # Core Problem Statement Box
     problem_box_data = [
@@ -237,12 +295,12 @@ def build_pdf():
     problem_table = Table(problem_box_data, colWidths=[526])
     problem_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), BG_CALLOUT),
-        ('PADDING', (0,0), (-1,-1), 8),
-        ('BOX', (0,0), (-1,-1), 1.5, ACCENT_RED),
+        ('PADDING', (0,0), (-1,-1), 6),
+        ('BOX', (0,0), (-1,-1), 1.25, ACCENT_RED),
         ('LINEBELOW', (0,0), (-1,0), 0.5, ACCENT_RED),
     ]))
     story.append(problem_table)
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 10))
 
     # Clean markdown helper
     def clean_text(t):
@@ -264,18 +322,28 @@ def build_pdf():
     while i < len(lines):
         line = lines[i].rstrip()
 
-        # Skip main title and metadata already rendered
-        if i < 8 or "CORE PROBLEM STATEMENT" in line or line.startswith(">"):
+        # Skip main title, metadata, problem statement box, and empty divider lines
+        if i < 8 or "CORE PROBLEM STATEMENT" in line or line.startswith(">") or line.strip() == "---":
             i += 1
             continue
 
-        # Code block
+        # Intercept code blocks for Section 3 (Architecture Pipeline) & Section 7 (Timeline)
         if line.startswith("```"):
             if in_code_block:
-                # Render code block
-                code_text = "<br/>".join([clean_text(l) for l in code_lines])
-                p_code = Paragraph(code_text, ParagraphStyle('CodeBlock', parent=styles['Normal'], fontName='Courier', fontSize=7.5, leading=10, backColor=colors.HexColor("#1A202C"), textColor=colors.HexColor("#E2E8F0"), borderPadding=6, spaceAfter=8))
-                story.append(p_code)
+                # End of code block: check if it's pipeline or timeline
+                full_code = "\n".join(code_lines)
+                if "RAW FINANCIAL MULTIVARIATE SERIES" in full_code:
+                    story.append(build_graphical_pipeline(styles))
+                    story.append(Spacer(1, 10))
+                elif "PHASE 1" in full_code:
+                    story.append(build_graphical_timeline(styles))
+                    story.append(Spacer(1, 10))
+                else:
+                    # Fallback simple code box
+                    code_text = "<br/>".join([clean_text(l) for l in code_lines])
+                    p_code = Paragraph(code_text, ParagraphStyle('CodeBlock', parent=styles['Normal'], fontName='Courier', fontSize=7.5, leading=10, backColor=colors.HexColor("#1A202C"), textColor=colors.HexColor("#E2E8F0"), borderPadding=6, spaceAfter=8))
+                    story.append(p_code)
+                    
                 code_lines = []
                 in_code_block = False
             else:
@@ -299,7 +367,7 @@ def build_pdf():
             # Process table
             if len(table_rows) > 1:
                 headers = [Paragraph(clean_text(c), table_header_style) for c in table_rows[0]]
-                # Skip separator line (row 1 if contains ---)
+                # Skip separator line
                 data_rows = table_rows[1:]
                 if data_rows and any("---" in c for c in data_rows[0]):
                     data_rows = data_rows[1:]
@@ -319,7 +387,7 @@ def build_pdf():
                     ('BACKGROUND', (0,0), (-1,0), PRIMARY),
                     ('ALIGN', (0,0), (-1,-1), 'LEFT'),
                     ('VALIGN', (0,0), (-1,-1), 'TOP'),
-                    ('PADDING', (0,0), (-1,-1), 5),
+                    ('PADDING', (0,0), (-1,-1), 4),
                     ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, BG_LIGHT]),
                     ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
                 ]))
@@ -332,7 +400,7 @@ def build_pdf():
         # Headings
         if line.startswith("## "):
             story.append(Paragraph(clean_text(line[3:]), h1_style))
-            story.append(HRFlowable(width="100%", thickness=0.8, color=SECONDARY, spaceBefore=2, spaceAfter=6))
+            story.append(HRFlowable(width="100%", thickness=0.8, color=SECONDARY, spaceBefore=1, spaceAfter=5))
             i += 1
             continue
         elif line.startswith("### "):
@@ -358,11 +426,11 @@ def build_pdf():
         i += 1
 
     # Add Sign-Off Table at the end
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
     story.append(Paragraph("9. Departmental Approval & Sign-Off Request", h1_style))
-    story.append(HRFlowable(width="100%", thickness=0.8, color=SECONDARY, spaceBefore=2, spaceAfter=8))
+    story.append(HRFlowable(width="100%", thickness=0.8, color=SECONDARY, spaceBefore=1, spaceAfter=6))
     story.append(Paragraph("We respectfully request departmental review and approval to proceed with the formal research program outlined above.", body_style))
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 6))
 
     signoff_data = [
         [Paragraph("<b>Role</b>", table_header_style), Paragraph("<b>Name & Institution</b>", table_header_style), Paragraph("<b>Signature</b>", table_header_style), Paragraph("<b>Date</b>", table_header_style)],
@@ -372,7 +440,7 @@ def build_pdf():
     signoff_table = Table(signoff_data, colWidths=[120, 206, 120, 80])
     signoff_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), PRIMARY),
-        ('PADDING', (0,0), (-1,-1), 8),
+        ('PADDING', (0,0), (-1,-1), 6),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, BG_LIGHT]),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
