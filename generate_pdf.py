@@ -104,7 +104,6 @@ def build_graphical_pipeline(styles):
 def build_graphical_timeline(styles):
     """Build a graphical 4-phase roadmap table."""
     title_style = ParagraphStyle('THead', fontName='Helvetica-Bold', fontSize=8.5, leading=11, textColor=colors.white)
-    badge_style = ParagraphStyle('TBadge', fontName='Helvetica-Bold', fontSize=8, leading=10, textColor=colors.white, alignment=TA_CENTER)
     cell_style = ParagraphStyle('TCell', fontName='Helvetica', fontSize=8, leading=11, textColor=colors.HexColor("#2D3748"))
     cell_bold = ParagraphStyle('TCellB', fontName='Helvetica-Bold', fontSize=8.5, leading=11, textColor=colors.HexColor("#1A365D"))
 
@@ -311,6 +310,40 @@ def build_pdf():
         t = re.sub(r'\$(.*?)\$', r'<i>\1</i>', t)
         return t
 
+    def render_table_data(t_rows):
+        if len(t_rows) <= 1:
+            return
+        headers = [Paragraph(clean_text(c), table_header_style) for c in t_rows[0]]
+        data_rows = t_rows[1:]
+        if data_rows and any("---" in c for c in data_rows[0]):
+            data_rows = data_rows[1:]
+        
+        body_rows = []
+        for r in data_rows:
+            body_rows.append([Paragraph(clean_text(c), table_cell_style) for c in r])
+        
+        table_data = [headers] + body_rows
+        n_cols = len(headers)
+        
+        if n_cols == 4:
+            # Special layout for 4-column Sign-Off Table (Role, Name, Signature, Date)
+            col_w_list = [120, 186, 130, 90]
+            t_obj = Table(table_data, colWidths=col_w_list)
+        else:
+            col_w = 526 / n_cols
+            t_obj = Table(table_data, colWidths=[col_w]*n_cols)
+
+        t_obj.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), PRIMARY),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('PADDING', (0,0), (-1,-1), 5),
+            ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, BG_LIGHT]),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
+        ]))
+        story.append(KeepTogether(t_obj))
+        story.append(Spacer(1, 8))
+
     # Read markdown sections
     lines = md_text.split('\n')
     in_code_block = False
@@ -365,35 +398,7 @@ def build_pdf():
 
         if in_table and not line.startswith("|"):
             # Process table
-            if len(table_rows) > 1:
-                headers = [Paragraph(clean_text(c), table_header_style) for c in table_rows[0]]
-                # Skip separator line
-                data_rows = table_rows[1:]
-                if data_rows and any("---" in c for c in data_rows[0]):
-                    data_rows = data_rows[1:]
-                
-                body_rows = []
-                for r in data_rows:
-                    body_rows.append([Paragraph(clean_text(c), table_cell_style) for c in r])
-                
-                table_data = [headers] + body_rows
-                
-                # Calculate column widths
-                n_cols = len(headers)
-                col_w = 526 / n_cols
-                
-                t_obj = Table(table_data, colWidths=[col_w]*n_cols)
-                t_obj.setStyle(TableStyle([
-                    ('BACKGROUND', (0,0), (-1,0), PRIMARY),
-                    ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-                    ('VALIGN', (0,0), (-1,-1), 'TOP'),
-                    ('PADDING', (0,0), (-1,-1), 4),
-                    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, BG_LIGHT]),
-                    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
-                ]))
-                story.append(t_obj)
-                story.append(Spacer(1, 8))
-
+            render_table_data(table_rows)
             table_rows = []
             in_table = False
 
@@ -422,6 +427,12 @@ def build_pdf():
         # Regular Paragraph
         if line.strip():
             story.append(Paragraph(clean_text(line), body_style))
+
+        i += 1
+
+    # Flush remaining table if file ends on table
+    if in_table and table_rows:
+        render_table_data(table_rows)
 
     # Build PDF
     print(f"[PDF] Generating {PDF_PATH}...")
