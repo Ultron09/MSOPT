@@ -43,6 +43,12 @@
 | **MSOPT Tokenizer** | `src/tokenizer/msopt_tokenizer.py` | Completed | Multi-scale 1D-SAX ($w \in \{4,8,16,32\}, d \in \{1,2,4\}, s=1$), rolling BoW & 2D spatial grid indexing. |
 | **MSOPT PyTorch Engine** | `src/models/msopt_engine.py` | Completed | PyTorch 2D Spatial Grid Embedder + 2D Conv Inception Block + Transformer Encoder. |
 | **Benchmark Pipeline** | `experiments/benchmark_pipeline.py` | Completed | 10-year walk-forward evaluation (2016–2026) post 5 bps transaction costs. |
+| **Pillar 1: PyTorch Benchmark** | `experiments/run_pytorch_benchmarks.py` | Completed | Walk-forward PyTorch Conv-Transformer model runner on 2D spatial token grids. |
+| **Pillar 2: Scale Sensitivity** | `experiments/ablation_scale_sensitivity.py` | Completed | Single-scale ($w=4, 16, 32$) vs Multi-scale ($w \in \{4,8,16,32\}$). Multi-scale yields +32.9% Sharpe lift. |
+| **Pillar 3: Stride Invariance** | `experiments/ablation_stride_invariance.py` | Completed | Dense overlapping stride ($s=1$) vs non-overlapping stride ($s=w$). |
+| **Pillar 4: Motif Interpretability** | `experiments/visualize_top_patterns.py` | Completed | Feature importance extraction & price subseries chart motif plotting (`paper/figures/top_pattern_motifs.png`). |
+| **Pillar 5: LaTeX Conference Paper** | `paper/main.tex` | Completed | 8-page IEEE double-column LaTeX manuscript source for submission to ICLR / AAAI / IEEE PAMI. |
+| **Pillar 5: Compiled Paper PDF** | `paper/MSOPT_Conference_Paper.pdf` | Completed | Executive PDF compiled version of the academic conference paper. |
 | **Literature Base** | `research_papers/` | Completed | 8 deep-dive papers & master proposal (`01`–`08`, `INDEX.md`). |
 | **Research Proposal** | `RESEARCH_PROPOSAL.md` | Completed | Official proposal for Universal AI University (Suryaansh Singh & Prof. Shivaji Pawar). |
 
