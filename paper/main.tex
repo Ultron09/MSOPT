@@ -20,12 +20,12 @@
 E-mail: suryaansh.singh@universalai.edu.in
 }}
 
-\markboth{IEEE Transactions on Pattern Analysis and Machine Intelligence / Conference Submission 2026}%
+\markboth{IEEE Transactions on Pattern Analysis and Machine Intelligence}%
 {Singh \MakeLowercase{\textit{et al.}}: MSOPT for Non-Stationary Financial Time Series}
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Deep learning architectures for time series modeling overwhelmingly rely on 1D serial pointwise vectors or uniform non-overlapping patch partitions. When applied to non-stationary financial markets, these paradigms suffer from severe limitations: single-scale rigidity, token boundary clipping distortion, and vulnerability to low signal-to-noise ratio (SNR) regime shifts. To resolve these challenges, we introduce \textbf{Multi-Scale Overlapping Pattern Tokenization (MSOPT)}—a novel framework that reformulates scalar price series into a multi-scale 2D Scale-Time Spatial Tensor. MSOPT combines dense dilated receptive field extraction ($w \in \{4,8,16,32\}, d \in \{1,2,4\}$) with dense translation-invariant stride ($s=1$) and thresholded 1D-SAX symbolic discretization (segment mean and slope quantization) to discover human-legible visual pattern primitives ("words"). Over a rigorous 10-year walk-forward expanding window evaluation (2016--2026) across S\&P 500 (\texttt{SPY}), Nasdaq (\texttt{QQQ}), Apple (\texttt{AAPL}), and Treasury Bonds (\texttt{TLT}) post 5 bps transaction costs, MSOPT achieves a \textbf{+71.1\% Out-of-Sample Sharpe Ratio lift} over standard fixed-window baselines ($0.8668$ vs $0.5065$ on \texttt{SPY}) while reducing Maximum Drawdown by \textbf{50\%} (from $-41.91\%$ to $-22.09\%$).
+Time series modeling in non-stationary financial domains faces severe challenges due to low signal-to-noise ratios, regime shifts, and multi-scale visual pattern structures. Standard serial pointwise models and uniform non-overlapping patch Transformers (e.g., PatchTST) suffer from single-scale rigidity and token boundary clipping. In this paper, we propose Multi-Scale Overlapping Pattern Tokenization (MSOPT)—a framework that converts 1D price series into a 2D Scale-Time Spatial Tensor using dense dilated receptive field extraction ($s=1$) and 1D-SAX symbolic discretization. Empirical experiments under walk-forward evaluation protocols measure performance across equity and fixed-income assets post transaction costs.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -35,139 +35,34 @@ Time Series Tokenization, Multi-Scale Pattern Recognition, 1D-SAX Discretization
 \maketitle
 
 \section{Introduction}
-\IEEEPARstart{F}{inancial} time series analysis represents one of the most complex domains in quantitative machine learning due to extreme non-stationarity, low signal-to-noise ratios (SNR), and abrupt non-linear regime shifts. Traditional deep sequence architectures—including Recurrent Neural Networks (RNNs), Long Short-Term Memory networks (LSTMs), and vanilla Transformers—process price data as a 1D sequence of continuous scalar points $x_t \in \mathbb{R}$. This serial approach exhibits two fundamental drawbacks: first, it incurs quadratic computational complexity $\mathcal{O}(T^2)$ over long temporal horizons; second, it fails to capture localized multi-scale visual shapes (e.g., micro-spikes, daily consolidations, macro breakouts) that human quantitative traders natively recognize.
+\IEEEPARstart{F}{inancial} time series analysis represents one of the most challenging domains in quantitative machine learning due to extreme non-stationarity, low signal-to-noise ratios (SNR), and non-linear regime shifts. Traditional sequence models process price data as a 1D sequence of continuous scalar points $x_t \in \mathbb{R}$. This serial approach exhibits quadratic computational complexity $\mathcal{O}(T^2)$ over long temporal horizons and fails to capture localized multi-scale visual shapes (e.g., micro-spikes, consolidations, breakouts) that human traders natively recognize.
 
-Recent foundation architectures for time series, such as PatchTST \cite{nie2023patchtst}, attempt to mitigate sequence length by aggregating raw scalar values into contiguous uniform patches ($P=16, S=8$). However, in financial markets, uniform non-overlapping patching forces rigid partition boundaries that clip pattern inflections arbitrarily. Furthermore, non-overlapping patch boundaries lack translation invariance: shifting an input series by a single timestep completely changes token representations.
+Recent architectures, such as PatchTST \cite{nie2023patchtst}, aggregate scalar values into contiguous uniform patches ($P=16$). However, uniform non-overlapping patching forces rigid partition boundaries that clip pattern inflections arbitrarily. Furthermore, non-overlapping patch boundaries lack translation invariance.
 
-To overcome these fundamental barriers, we present \textbf{Multi-Scale Overlapping Pattern Tokenization (MSOPT)}. MSOPT treats financial series not as 1D scalar vectors, but as 2D spatial chart primitives. Our primary research contributions are:
+To overcome these barriers, we propose \textbf{Multi-Scale Overlapping Pattern Tokenization (MSOPT)}. MSOPT treats financial series as 2D spatial chart primitives.
+
+\section{Related Work}
+Time series representation learning spans three dominant paradigms:
 \begin{enumerate}
-    \item \textbf{Dense Multi-Scale Receptive Fields ($s=1$)}: We enforce dense overlapping stride $s=1$ across multi-scale dilated windows ($w \in \{4,8,16,32\}, d \in \{1,2,4\}$), providing $100\%$ translation invariance and eliminating boundary clipping distortion.
-    \item \textbf{1D-SAX Symbolic Codebook Discretization}: We quantize local subseries into discrete mean ($\alpha_{\mu}$) and trend slope ($\alpha_{\beta}$) symbols, constructing a human-legible codebook that filters high-frequency market noise.
-    \item \textbf{2D Scale-Time Spatial Tensor Grid}: We map extracted tokens onto a 2D spatial grid $\mathbf{H} \in \mathbb{Z}^{N_{scales} \times T}$, enabling 2D spatial convolutions to model cross-scale pattern composition.
-    \item \textbf{Empirical Walk-Forward Superiority}: Across a 10-year walk-forward backtest (2016--2026) post 5 bps transaction costs, MSOPT delivers up to $+71.1\%$ Sharpe ratio lift and $50\%$ drawdown reduction.
+    \item \textbf{Pointwise Serial Architectures}: LSTMs, DeepAR, and N-BEATS process step-by-step inputs.
+    \item \textbf{Fixed Uniform Patching}: PatchTST \cite{nie2023patchtst} aggregates subseries into non-overlapping patches.
+    \item \textbf{Symbolic Discretization}: BORF \cite{spinnato2024borf} and SAX \cite{lin2003sax} discretize subseries into symbolic representations. TS-BPE \cite{gotz2025tsbpe} applies subseries Byte Pair Encoding.
 \end{enumerate}
 
-\section{Related Work \& 2025--2026 Literature Frontier}
-Time series representation learning has evolved across three distinct technological paradigms:
-
-\textbf{1. Pointwise Serial Architectures}: Early deep models (LSTMs, DeepAR, N-BEATS) process step-by-step price inputs. In noisy financial contexts, pointwise MSE loss forces predictions toward trivial flat means, causing total predictive collapse.
-
-\textbf{2. Fixed Uniform Patching}: PatchTST \cite{nie2023patchtst} introduced subseries patching for Transformers. While effective in stationary energy datasets, rigid patch lengths ($P=16$) clip financial pattern inflections and fail during sudden regime shifts.
-
-\textbf{3. Symbolic Discretization \& Foundation Preprints}: Bag-of-Receptive-Fields (BORF) \cite{spinnato2024borf} combined dilated subseries with 1D-SAX discretization. However, BORF uses unweighted Bag-of-Words histograms, discarding temporal sequence ordering. Modern 2025/2026 preprints like TS-BPE \cite{gotz2025tsbpe} merge subseries via Byte Pair Encoding but enforce non-overlapping partitions.
-
-\textit{The Critical Gap}: No existing framework unifies multi-scale dilated receptive field extraction, dense translation-invariant overlapping tokenization ($s=1$), 1D-SAX human-legible codebooks, and 2D scale-time spatial tensor representations within a non-stationary financial modeling paradigm.
-
-\section{Methodology: MSOPT Architecture}
-
-\subsection{Multi-Scale Dilated Receptive Field Extraction}
-Given a multivariate financial time series $\mathbf{X} \in \mathbb{R}^{C \times T}$, we define a set of receptive field window sizes $\mathcal{W} = \{4, 8, 16, 32\}$ and dilation factors $\mathcal{D} = \{1, 2, 4\}$. For each scale configuration $(w, d) \in \mathcal{W} \times \mathcal{D}$, the effective temporal span is $L = d \cdot (w - 1) + 1$. We sample subseries densely with stride $s=1$:
+\section{Methodology}
+\subsection{Multi-Scale Dilated Receptive Fields}
+For receptive field window sizes $\mathcal{W} = \{4, 8, 16, 32\}$ and dilations $\mathcal{D} = \{1, 2, 4\}$, we sample subseries densely with stride $s=1$:
 \begin{equation}
 \mathbf{s}_{t}^{(w,d)} = \left[ x_{t - d \cdot (w-1)}, x_{t - d \cdot (w-2)}, \dots, x_{t} \right]
 \end{equation}
 
-\subsection{1D-SAX Symbolic Codebook Discretization}
-Each subseries $\mathbf{s}_{t}^{(w,d)}$ is standardized: $\hat{\mathbf{s}} = (\mathbf{s} - \bar{s}) / \sigma_s$. If $\sigma_s < \theta_{flat}$, the window is classified as a flat token \texttt{FLAT\_w}. Otherwise, $\hat{\mathbf{s}}$ is partitioned into $K=4$ equal segments. For segment $k$, we compute:
-\begin{enumerate}
-    \item \textbf{Segment Mean} $\mu_k \to \alpha_{\mu} \in \{\text{A, B, C, D}\}$ via Gaussian equiprobable breakpoints.
-    \item \textbf{Segment Slope} $\beta_k \to \alpha_{\beta} \in \{\text{A, B, C}\}$ via linear trend regression slope breakpoints.
-\end{enumerate}
-The concatenation of segment symbols forms a discrete 1D-SAX word string:
-\begin{equation}
-W_t^{(w,d)} = \text{Concat}\left( \alpha_{\mu, k} \| \alpha_{\beta, k} \right)_{k=1}^{K}
-\end{equation}
+\subsection{1D-SAX Symbolic Discretization}
+Subseries are standardized and quantized into segment mean ($\alpha_{\mu}$) and slope ($\alpha_{\beta}$) symbols \cite{lin2003sax}, forming discrete 1D-SAX word strings.
 
-\subsection{2D Scale-Time Spatial Tensor Grid Mapping}
-The extracted token words are mapped to unique integer IDs in a global vocabulary $\mathcal{V}$. We arrange tokens into a 2D Spatial Grid Matrix $\mathbf{H} \in \mathbb{Z}^{N_{scales} \times T}$, where row $j$ corresponds to scale $(w_j, d_j)$ and column $t$ corresponds to timestamp $t$.
-
-\subsection{PyTorch Conv-Transformer Backbone}
-Our PyTorch neural backbone maps $\mathbf{H}$ into a 4D feature tensor $\mathbf{Z} \in \mathbb{R}^{B \times D \times N_{scales} \times T}$:
-\begin{equation}
-\mathbf{Z}_{j, t} = \mathbf{E}_{token}\left(\mathbf{H}_{j,t}\right) + \mathbf{E}_{scale}(j) + \mathbf{E}_{time}(t)
-\end{equation}
-We pass $\mathbf{Z}$ through a 2D Inception Spatial Convolution block with multi-scale kernels ($(1\times 3), (3\times 3), (3\times 1)$) to capture inter-scale pattern composition, followed by a Multi-Head Transformer Encoder across temporal steps.
-
-\section{High-SNR Task Target \& Validation Protocol}
-\subsection{High-Signal Target Formulation (Fork B Alignment)}
-To avoid the low signal-to-noise ratio trap of raw point return regression ($\hat{y}_{t+1} \in \mathbb{R}$, where MSE loss forces trivial "flat" predictions), MSOPT evaluates two classification tasks:
-\begin{enumerate}
-    \item \textbf{Directional Move Threshold Classification ($y_{dir}$)}:
-    \begin{equation}
-    y_{dir, t} = \begin{cases} +1 & \text{if } R_{t:t+H} > +\delta \cdot \sigma_t \\ -1 & \text{if } R_{t:t+H} < -\delta \cdot \sigma_t \\ 0 & \text{otherwise} \end{cases}
-    \end{equation}
-    where $\delta = 0.5$ volatility units over horizon $H = 5$ days.
-    \item \textbf{Volatility Regime Shift Classification ($y_{vol}$)}:
-    \begin{equation}
-    y_{vol, t} = \mathbb{I}\left( \sigma_{t:t+H} > 1.5 \cdot \bar{\sigma}_{30} \right)
-    \end{equation}
-\end{enumerate}
-
-\section{Empirical Benchmark Results \& Analysis}
-We evaluate MSOPT under an expanding walk-forward protocol (2016--2025) across \texttt{SPY}, \texttt{QQQ}, \texttt{AAPL}, and \texttt{TLT}. All backtests enforce \textbf{5 bps (0.05\%) transaction costs} per trade.
-
-\begin{table}[ht]
-\caption{Authentic 10-Year Out-of-Sample Performance (2016--2025, Post 5 Bps Costs)}
-\label{tab:results}
-\centering
-\small
-\begin{tabular}{llccc}
-\toprule
-\textbf{Asset} & \textbf{Model Paradigm} & \textbf{Sharpe} & \textbf{Sortino} & \textbf{Max DD} \\
-\midrule
-\texttt{SPY} & Baseline (Tech Lags \& Vol) & 0.6956 & 0.8688 & -29.13\% \\
-\texttt{SPY} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.7619} & \textbf{0.9284} & \textbf{-33.01\%} \\
-\texttt{SPY} & Combined (Tech + Tokens) & 0.7075 & 0.8761 & -25.54\% \\
-\midrule
-\texttt{QQQ} & Baseline (Tech Lags \& Vol) & 0.5389 & 0.6700 & -43.58\% \\
-\texttt{QQQ} & \textbf{MSOPT Tokens (Ours)} & \textbf{1.1893} & \textbf{1.5085} & \textbf{-28.56\%} \\
-\texttt{QQQ} & Combined (Tech + Tokens) & 0.6636 & 0.8487 & -34.85\% \\
-\midrule
-\texttt{AAPL} & Baseline (Tech Lags \& Vol) & 0.3070 & 0.4171 & -56.12\% \\
-\texttt{AAPL} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.7117} & \textbf{0.9652} & \textbf{-30.22\%} \\
-\texttt{AAPL} & Combined (Tech + Tokens) & 0.8870 & 1.2305 & -34.01\% \\
-\midrule
-\texttt{TLT} & Baseline (Tech Lags \& Vol) & -0.0385 & -0.0573 & -40.22\% \\
-\texttt{TLT} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.2323} & \textbf{0.3536} & \textbf{-42.79\%} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Controlled Ablation Studies}
-\subsection{Scale Sensitivity Analysis}
-Comparing single-scale setups ($w=4$ vs $w=16$ vs $w=32$) against full multi-scale MSOPT confirms that combining short and long receptive fields is essential for isolating regime shifts, yielding a $+32.9\%$ Sharpe enhancement over single-scale models ($0.57 \to 0.76$).
-
-\subsection{Stride Invariance ($s=1$ vs $s=w$)}
-Enforcing dense overlapping stride $s=1$ eliminates boundary clipping distortion, outperforming non-overlapping partitions ($s=w$) by $+0.31$ in Out-of-Sample Sharpe Ratio.
-
-\section{Codebook Interpretability \& Visual Motif Discovery}
-A major advantage of MSOPT is human legibility. By extracting GBDT feature importance scores for discrete 1D-SAX pattern tokens, we isolate the top-4 most predictive market chart primitives:
-\begin{enumerate}
-    \item \texttt{SPY\_w4\_d1\_DBCBBBAB} (Importance: 90): Micro short-scale volatility spike \& immediate reversal.
-    \item \texttt{SPY\_w4\_d2\_CBABDBBB} (Importance: 75): Dilated micro dip-and-recovery motif.
-    \item \texttt{SPY\_w32\_d1\_CBCBBBBB} (Importance: 74): 32-bar macro consolidation breakdown.
-    \item \texttt{SPY\_w32\_d1\_CBBBCBBB} (Importance: 67): 32-bar macro trend continuation motif.
-\end{enumerate}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.48\textwidth]{figures/top_pattern_motifs.png}
-\caption{Top-4 Learned MSOPT Pattern Codebook Primitives \& Price Chart Motifs (SPY).}
-\label{fig:motifs}
-\end{figure}
-
-\section{Conclusion \& Future Directions}
-We presented MSOPT, a multi-scale overlapping pattern tokenization framework for non-stationary time series. By unifying 1D-SAX discretization, dense translation-invariant stride ($s=1$), and 2D spatial Conv-Transformers, MSOPT achieves state-of-the-art out-of-sample financial performance and robust capital preservation post 5 bps transaction costs.
+\section{Empirical Evaluation}
+\textit{[Empirical walk-forward results will be populated here as real experiments complete.]}
 
 \bibliographystyle{IEEEtran}
-\begin{thebibliography}{10}
-\bibitem{nie2023patchtst}
-Y.~Nie, N.~H. Nguyen, P.~Zeng, and A.~Kalashnikov, ``A time series is worth 64 words: Long-term forecasting with transformers,'' in \emph{ICLR}, 2023.
-\bibitem{spinnato2024borf}
-J.~Spinnato et~al., ``Bag-of-receptive-fields for time series classification,'' \emph{IEEE Trans. Pattern Anal. Mach. Intell.}, 2024.
-\bibitem{gotz2025tsbpe}
-M.~G\"otz et~al., ``TS-BPE: Byte pair encoding tokenization for time series foundation models,'' \emph{arXiv preprint}, 2025.
-\bibitem{wu2023timesnet}
-H.~Wu, T.~Hu, Y.~Liu, H.~Zhou, J.~Wang, and M.~Long, ``TimesNet: Temporal 2D-variation modeling for general time series analysis,'' in \emph{ICLR}, 2023.
-\end{thebibliography}
+\bibliography{references}
 
 \end{document}
