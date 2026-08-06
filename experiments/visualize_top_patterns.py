@@ -44,7 +44,7 @@ def generate_pattern_visualizations(ticker: str = "SPY"):
     importances = clf.feature_importances_
     sorted_indices = np.argsort(importances)[::-1]
     
-    top_token_ids = [int(freq_cols[idx].replace('token_', '')) for idx in sorted_indices[:4]]
+    top_token_ids = [int(str(freq_cols[idx]).replace('token_', '')) for idx in sorted_indices[:4]]
     top_words = [tokenizer.inverse_vocabulary_[tid] for tid in top_token_ids]
     
     print(f"  Top-4 Most Predictive Pattern Tokens:")
