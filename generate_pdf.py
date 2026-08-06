@@ -423,31 +423,6 @@ def build_pdf():
         if line.strip():
             story.append(Paragraph(clean_text(line), body_style))
 
-        i += 1
-
-    # Add Sign-Off Table at the end
-    story.append(Spacer(1, 10))
-    story.append(Paragraph("9. Departmental Approval & Sign-Off Request", h1_style))
-    story.append(HRFlowable(width="100%", thickness=0.8, color=SECONDARY, spaceBefore=1, spaceAfter=6))
-    story.append(Paragraph("We respectfully request departmental review and approval to proceed with the formal research program outlined above.", body_style))
-    story.append(Spacer(1, 6))
-
-    signoff_data = [
-        [Paragraph("<b>Role</b>", table_header_style), Paragraph("<b>Name & Institution</b>", table_header_style), Paragraph("<b>Signature</b>", table_header_style), Paragraph("<b>Date</b>", table_header_style)],
-        [Paragraph("Lead Researcher / Author", table_cell_style), Paragraph("<b>Suryaansh Prithvijit Singh</b><br/>Universal AI University", table_cell_style), Paragraph("<br/><br/>_______________________", table_cell_style), Paragraph("<br/><br/>___ / ___ / 2026", table_cell_style)],
-        [Paragraph("Faculty Guide / Supervisor", table_cell_style), Paragraph("<b>Prof. Shivaji Pawar</b><br/>Faculty Guide, Dept. of Future Tech<br/>Universal AI University", table_cell_style), Paragraph("<br/><br/>_______________________", table_cell_style), Paragraph("<br/><br/>___ / ___ / 2026", table_cell_style)],
-    ]
-    signoff_table = Table(signoff_data, colWidths=[120, 206, 120, 80])
-    signoff_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), PRIMARY),
-        ('PADDING', (0,0), (-1,-1), 6),
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, BG_LIGHT]),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
-    ]))
-    
-    story.append(KeepTogether(signoff_table))
-
     # Build PDF
     print(f"[PDF] Generating {PDF_PATH}...")
     doc.build(story, canvasmaker=NumberedCanvas)
