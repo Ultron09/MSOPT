@@ -2,7 +2,7 @@
 
 **Project Title**: Multi-Scale Overlapping Pattern Tokenization (MSOPT) for Non-Stationary Financial Time Series  
 **Lead Researcher / Author**: **Suryaansh Prithvijit Singh**  
-**Submitted To**: **Prof. Shivaji Pawar**, Head of Department (HOD), Department of Future Tech  
+**Faculty Guide / Supervisor**: **Prof. Shivaji Pawar**, Department of Future Tech  
 **Institution**: **Universal AI University**  
 **Date**: August 2026  
 
@@ -157,5 +157,6 @@ We respectfully request departmental review and approval to proceed with the for
 | Role | Name | Signature | Date |
 |---|---|---|---|
 | **Lead Researcher / Author** | **Suryaansh Prithvijit Singh** (Universal AI University) | ____________________ | ____/____/2026 |
-| **HOD, Future Tech** | **Prof. Shivaji Pawar** (Universal AI University) | ____________________ | ____/____/2026 |
+| **Faculty Guide / Supervisor** | **Prof. Shivaji Pawar** (Universal AI University) | ____________________ | ____/____/2026 |
+
 

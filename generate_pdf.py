@@ -212,7 +212,7 @@ def build_pdf():
     meta_data = [
         [Paragraph("Project Title:", meta_label_style), Paragraph("Multi-Scale Overlapping Pattern Tokenization (MSOPT) for Non-Stationary Financial Time Series", meta_val_style)],
         [Paragraph("Lead Researcher:", meta_label_style), Paragraph("<b>Suryaansh Prithvijit Singh</b> (Universal AI University)", meta_val_style)],
-        [Paragraph("Submitted To:", meta_label_style), Paragraph("<b>Prof. Shivaji Pawar</b>, Head of Department (HOD), Dept. of Future Tech", meta_val_style)],
+        [Paragraph("Faculty Guide:", meta_label_style), Paragraph("<b>Prof. Shivaji Pawar</b>, Faculty Guide / Supervisor, Dept. of Future Tech", meta_val_style)],
         [Paragraph("Date & Status:", meta_label_style), Paragraph("August 2026 | Proposal Pending Formal Department Approval", meta_val_style)],
     ]
     meta_table = Table(meta_data, colWidths=[100, 426])
@@ -367,7 +367,7 @@ def build_pdf():
     signoff_data = [
         [Paragraph("<b>Role</b>", table_header_style), Paragraph("<b>Name & Institution</b>", table_header_style), Paragraph("<b>Signature</b>", table_header_style), Paragraph("<b>Date</b>", table_header_style)],
         [Paragraph("Lead Researcher / Author", table_cell_style), Paragraph("<b>Suryaansh Prithvijit Singh</b><br/>Universal AI University", table_cell_style), Paragraph("<br/><br/>_______________________", table_cell_style), Paragraph("<br/><br/>___ / ___ / 2026", table_cell_style)],
-        [Paragraph("HOD, Future Tech", table_cell_style), Paragraph("<b>Prof. Shivaji Pawar</b><br/>Head of Department, Future Tech<br/>Universal AI University", table_cell_style), Paragraph("<br/><br/>_______________________", table_cell_style), Paragraph("<br/><br/>___ / ___ / 2026", table_cell_style)],
+        [Paragraph("Faculty Guide / Supervisor", table_cell_style), Paragraph("<b>Prof. Shivaji Pawar</b><br/>Faculty Guide, Dept. of Future Tech<br/>Universal AI University", table_cell_style), Paragraph("<br/><br/>_______________________", table_cell_style), Paragraph("<br/><br/>___ / ___ / 2026", table_cell_style)],
     ]
     signoff_table = Table(signoff_data, colWidths=[120, 206, 120, 80])
     signoff_table.setStyle(TableStyle([
