@@ -148,15 +148,3 @@ To guarantee scientific validity and prevent backtest overfitting, MSOPT will be
 2. **Open-Source Python Framework**: A robust, well-documented time series tokenization toolkit (`msopt-ts`) bridging traditional quantitative finance and modern deep learning.
 3. **Novel Intellectual Property**: A benchmarked, state-of-the-art multi-scale pattern recognition architecture tailored for high-noise non-stationary domains.
 
----
-
-## 9. Departmental Approval & Sign-Off Request
-
-We respectfully request departmental review and approval to proceed with the formal research program outlined above.
-
-| Role | Name | Signature | Date |
-|---|---|---|---|
-| **Lead Researcher / Author** | **Suryaansh Prithvijit Singh** (Universal AI University) | ____________________ | ____/____/2026 |
-| **Faculty Guide / Supervisor** | **Prof. Shivaji Pawar** (Universal AI University) | ____________________ | ____/____/2026 |
-
-
