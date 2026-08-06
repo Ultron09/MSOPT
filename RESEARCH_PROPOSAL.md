@@ -1,8 +1,9 @@
 # DEPARTMENT RESEARCH PROPOSAL
 
 **Project Title**: Multi-Scale Overlapping Pattern Tokenization (MSOPT) for Non-Stationary Financial Time Series  
-**Principal Investigator / Author**: Quantitative Machine Learning Research Group  
-**Target Submission**: Department Research Committee Approval & Review  
+**Lead Researcher / Author**: **Suryaansh Prithvijit Singh**  
+**Submitted To**: **Prof. Shivaji Pawar**, Head of Department (HOD), Department of Future Tech  
+**Institution**: **Universal AI University**  
 **Date**: August 2026  
 
 ---
@@ -23,7 +24,7 @@ Financial price series (equities, indices, derivatives) present one of the most 
 
 This research proposes **Multi-Scale Overlapping Pattern Tokenization (MSOPT)**—a novel paradigm that reformulates financial time series modeling. Rather than treating market data as a 1D scalar sequence, MSOPT transforms time series into a **2D Scale-Time Spatial Tensor of multi-scale overlapping receptive fields**. By combining dilated receptive field extraction ($w \in [4, 32], d \in [1, 4]$) with 1D-SAX symbolic discretization (mean + trend slope quantization), MSOPT constructs an interpretable, translation-invariant vocabulary of market pattern tokens ("words"). 
 
-This proposal outlines the theoretical motivation, literature gap, mathematical framework, validation protocol, and expected departmental contributions of the MSOPT research program.
+This proposal outlines the theoretical motivation, literature gap, mathematical framework, validation protocol, and expected departmental contributions of the MSOPT research program at **Universal AI University**.
 
 ---
 
@@ -155,5 +156,6 @@ We respectfully request departmental review and approval to proceed with the for
 
 | Role | Name | Signature | Date |
 |---|---|---|---|
-| **Lead Researcher** | Quantitative AI Group | ____________________ | ____/____/2026 |
-| **Faculty Advisor / Dept Chair** | Department Committee | ____________________ | ____/____/2026 |
+| **Lead Researcher / Author** | **Suryaansh Prithvijit Singh** (Universal AI University) | ____________________ | ____/____/2026 |
+| **HOD, Future Tech** | **Prof. Shivaji Pawar** (Universal AI University) | ____________________ | ____/____/2026 |
+
