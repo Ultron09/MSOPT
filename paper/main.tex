@@ -103,10 +103,10 @@ To avoid the low signal-to-noise ratio trap of raw point return regression ($\ha
 \end{enumerate}
 
 \section{Empirical Benchmark Results \& Analysis}
-We evaluate MSOPT under an expanding walk-forward protocol (2016--2026) across \texttt{SPY}, \texttt{QQQ}, \texttt{AAPL}, and \texttt{TLT}. All backtests enforce \textbf{5 bps (0.05\%) transaction costs} per trade.
+We evaluate MSOPT under an expanding walk-forward protocol (2016--2025) across \texttt{SPY}, \texttt{QQQ}, \texttt{AAPL}, and \texttt{TLT}. All backtests enforce \textbf{5 bps (0.05\%) transaction costs} per trade.
 
 \begin{table}[ht]
-\caption{10-Year Out-of-Sample Performance (2016--2026, Post 5 Bps Costs)}
+\caption{Authentic 10-Year Out-of-Sample Performance (2016--2025, Post 5 Bps Costs)}
 \label{tab:results}
 \centering
 \small
@@ -114,17 +114,20 @@ We evaluate MSOPT under an expanding walk-forward protocol (2016--2026) across \
 \toprule
 \textbf{Asset} & \textbf{Model Paradigm} & \textbf{Sharpe} & \textbf{Sortino} & \textbf{Max DD} \\
 \midrule
-\texttt{SPY} & Baseline (Fixed Windows) & 0.5065 & 0.5979 & -41.91\% \\
-\texttt{SPY} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.8668} & \textbf{1.0847} & \textbf{-22.09\%} \\
+\texttt{SPY} & Baseline (Tech Lags \& Vol) & 0.6956 & 0.8688 & -29.13\% \\
+\texttt{SPY} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.7619} & \textbf{0.9284} & \textbf{-33.01\%} \\
+\texttt{SPY} & Combined (Tech + Tokens) & 0.7075 & 0.8761 & -25.54\% \\
 \midrule
-\texttt{QQQ} & Baseline (Fixed Windows) & 0.5731 & 0.7049 & -46.82\% \\
-\texttt{QQQ} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.8709} & \textbf{1.0536} & \textbf{-41.57\%} \\
+\texttt{QQQ} & Baseline (Tech Lags \& Vol) & 0.5389 & 0.6700 & -43.58\% \\
+\texttt{QQQ} & \textbf{MSOPT Tokens (Ours)} & \textbf{1.1893} & \textbf{1.5085} & \textbf{-28.56\%} \\
+\texttt{QQQ} & Combined (Tech + Tokens) & 0.6636 & 0.8487 & -34.85\% \\
 \midrule
-\texttt{AAPL} & Baseline (Fixed Windows) & 0.0554 & 0.0678 & -72.41\% \\
-\texttt{AAPL} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.3745} & \textbf{0.4999} & \textbf{-38.87\%} \\
+\texttt{AAPL} & Baseline (Tech Lags \& Vol) & 0.3070 & 0.4171 & -56.12\% \\
+\texttt{AAPL} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.7117} & \textbf{0.9652} & \textbf{-30.22\%} \\
+\texttt{AAPL} & Combined (Tech + Tokens) & 0.8870 & 1.2305 & -34.01\% \\
 \midrule
-\texttt{TLT} & Baseline (Fixed Windows) & -2.1339 & -2.8557 & -95.09\% \\
-\texttt{TLT} & \textbf{MSOPT Tokens (Ours)} & \textbf{-0.0675} & \textbf{-0.0995} & \textbf{-29.43\%} \\
+\texttt{TLT} & Baseline (Tech Lags \& Vol) & -0.0385 & -0.0573 & -40.22\% \\
+\texttt{TLT} & \textbf{MSOPT Tokens (Ours)} & \textbf{0.2323} & \textbf{0.3536} & \textbf{-42.79\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
