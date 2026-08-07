@@ -14,6 +14,7 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 | **Matrix Profile Diagnostic** | `explore_matrix_profile.py` | Completed | STUMPY 1D matrix profile on 4,023 SPY daily return bars ($m \in \{5, 10, 20, 30, 50\}$). |
 | **MSOPT Tokenizer** | `src/tokenizer/msopt_tokenizer.py` | Completed | Multi-scale 1D-SAX ($w \in \{4,8,16,32\}, d \in \{1,2,4\}, s=1$). |
 | **Tokenizer Inspection Test** | `tests/test_tokenizer_inspection.py` | Completed | Verified 1D-SAX word extraction, 2D Spatial Grid (12xT), and zero lookahead bias. |
+| **Backtest Metric Math Test** | `tests/test_backtest_metrics.py` | Completed | Verified 5 bps fee deduction, signal alignment, wealth curve, Sharpe, Sortino, Max DD. |
 | **PyTorch MSOPT Engine** | `src/models/msopt_engine.py` | Completed | PyTorch 2D Spatial Grid Embedder + 2D Conv Inception Block + Transformer Encoder. |
 | **Bibliography Base** | `paper/references.bib` | Completed | Verified BibTeX database with authentic citations (Nie et al., Wu et al., Spinnato et al., Lin et al., Yeh et al.). |
 
@@ -39,20 +40,29 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 
 ---
 
-## Real Experiment Log 2: MSOPT Tokenizer Standalone Inspection & Sanity Verification
+## Real Experiment Log 3: Backtest Financial Accounting & Metric Math Verification
 
 **Date**: August 7, 2026  
-**Script**: `tests/test_tokenizer_inspection.py`  
-**Data**: 49 authentic daily log return bars for SPY (2010-05-28 to 2010-08-06).  
+**Script**: `tests/test_backtest_metrics.py`  
+**Protocol**: Hand-calculated 5-day deterministic return and signal sequence verification.  
 
-### 📊 Tokenizer Inspection Results
+### 📊 Verification Ledger Results
 
-| Inspection Check | Parameter / Value | Verification Result |
-|---|---|---|
-| **Scale Configurations ($N_{scales}$)** | 12 scales ($(w, d) \in \{4,8,16,32\} \times \{1,2,4\}$) | Verified 12 row 2D Spatial Grid |
-| **1D-SAX Discretization (K=4)** | Mean ($\alpha_{\mu} \in \{A,B,C,D\}$) + Slope ($\alpha_{\beta} \in \{A,B,C\}$) | Verified discrete word strings (e.g. `SPY_ret_w4_d1_CBABCBDB`) |
-| **Vocab Expansion** | 267 unique pattern words across 49 timesteps | Verified dynamic vocabulary building |
-| **Zero Lookahead Bias** | Retrospective evaluation ($t \in [t_{start} \dots t_{end}]$) | **100% Passed**: Zero lookahead leakage |
+| Step ($t$) | Asset Return ($R_t$) | Signal ($p_t$) | Flip $|p_t - p_{t-1}|$ | Tx Cost (5 bps) | Gross Return | Net Return ($R_{net}$) | Compounded Wealth ($W_t$) | Drawdown |
+|---|---|---|---|---|---|---|---|---|
+| **Day 0** | +2.00% | +1 | 1.0 | 0.05% (0.0005) | +2.00% | **+1.95%** | **1.019500** | 0.00% |
+| **Day 1** | -1.00% | -1 | 2.0 | 0.10% (0.0010) | +1.00% | **+0.90%** | **1.028676** | 0.00% |
+| **Day 2** | +3.00% | +1 | 2.0 | 0.10% (0.0010) | +3.00% | **+2.90%** | **1.058507** (Peak) | 0.00% |
+| **Day 3** | -2.00% |  0 | 1.0 | 0.05% (0.0005) |  0.00% | **-0.05%** | **1.057978** | **-0.05%** |
+| **Day 4** | +1.00% | +1 | 1.0 | 0.05% (0.0005) | +1.00% | **+0.95%** | **1.068029** | 0.00% |
+
+---
+
+### 🔑 Accounting Verification Findings:
+1. **Signal Shift Alignment**: Position held during day $t$ is strictly determined at end of day $t-1$.
+2. **Transaction Cost Deduction**: Fee of 5 bps ($0.05\% = 0.0005$) per unit of position change is deducted on the day the flip occurs.
+3. **Wealth & Drawdown**: Wealth compounds multiplicatively $W_t = \prod (1 + R_{net, t})$; Max Drawdown measures peak-to-trough percentage drop relative to running maximum.
+
 
 
 ---
