@@ -114,11 +114,41 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 
 ### 🔑 Verified Domain Observations:
 1. **Noise Reduction on ETF Indices (`SPY` / `QQQ`)**:
-   - On **`SPY`**, MSOPT tokens boosted Sharpe from **-0.4043 $\to$ 0.7589** and Total Return from **-46.46% $\to$ +229.60%** by cutting position flips from 633 to 71.
-   - On **`QQQ`**, MSOPT tokens increased Sharpe from **0.2670 $\to$ 0.7341** and Total Return from **+36.74% $\to$ +297.54%**, cutting drawdown from **-59.52% to -30.54%**.
+   - On **`SPY`**, MSOPT tokens boosted Sharpe from **-0.4043 → 0.7589** and Total Return from **-46.46% → +229.60%** by cutting position flips from 633 to 71.
+   - On **`QQQ`**, MSOPT tokens increased Sharpe from **0.2670 → 0.7341** and Total Return from **+36.74% → +297.54%**, cutting drawdown from **-59.52% to -30.54%**.
 
-2. **Single-Stock Trend Drift vs Token Granularity (`AAPL`)**:
-   - On **`AAPL`**, standard technical momentum capture outperformed pattern word counts (+2354% vs -27.66%). Single-stock equity drift is dominated by macro earnings momentum rather than local shape word frequencies.
+2. **Single-Stock Trend Drift vs Token Granularity (`AAPL`)** ⚠️ CAVEAT:
+   - On **`AAPL`**, standard technical baseline achieved **+2354%** compounded directional trading return vs **-27.66%** for MSOPT tokens.
+   - **AAPL's actual buy-and-hold appreciation (split-adjusted) = +1,044% (11.4x)**, NOT "25x" as previously stated.
+   - The baseline's +2354% exceeds buy-and-hold by 2.3x — possible via daily directional compounding but warrants scrutiny for in-sample overfitting.
 
-3. **Protection During Fixed-Income Collapse (`TLT`)**:
-   - During the 2021–2024 treasury crash, technical baselines collapsed completely (-99.79% return, 940 flips paying 70.95% in fees). MSOPT tokens limited max drawdown to -55.79% and net return to -30.64%.
+3. **Treasury Bonds (`TLT`)** ⚠️ CORRECTED INTERPRETATION:
+   - **TLT's actual buy-and-hold return (2016-2025) = -5.98%** (peak-to-trough drawdown: -48.35%).
+   - The baseline's -99.79% return is a **self-inflicted compounded fee death spiral**, NOT a market loss.
+   - The model flipped positions on **37.7% of trading days** (every 2.7 days), compounding 5-10 bps per flip multiplicatively.
+   - Wealth dropped below $0.01 at day 1,828 of 2,509 OOS days.
+   - MSOPT tokens reduced churn to 147 flips but still lost -30.64%, underperforming buy-and-hold.
+
+---
+
+## Experiment 6: Forensic Audit of All Empirical Claims
+- **Date**: 2026-08-07
+- **Script**: `experiments/forensic_audit.py`
+- **Purpose**: Independent verification of every claim in the paper against ground truth data.
+
+### Findings:
+| # | Claim | Verdict | Correction |
+|---|-------|---------|------------|
+| 1 | Pipeline is deterministic | **CONFIRMED ✓** | SPY Sharpe = 0.758946 on both runs (identical to 6 decimal places) |
+| 2 | AAPL "25x structural rally" | **FALSE** | Actual: 11.4x (1,044%) split-adjusted |
+| 3 | AAPL baseline +2354% | **MECHANICALLY POSSIBLE** but exceeds B&H by 2.3x — possible overfitting |
+| 4 | TLT baseline -99.79% | **MISLEADING** | Self-inflicted fee spiral; TLT itself only lost 5.98% |
+| 5 | Numbers stable across 3 paper versions | **FALSE** | Different data snapshots + different baseline code between sessions |
+
+### Corrective Actions Taken:
+1. Froze data CSVs with SHA-256 hashes in `data/DATA_MANIFEST.sha256`.
+2. Corrected AAPL narrative in `paper/main.tex` and `paper/generate_paper_pdf.py`.
+3. Corrected TLT narrative — explained fee death spiral mechanism explicitly.
+4. Added methodological caveat noting classifier is LightGBM, not the Conv-Transformer.
+5. Regenerated `paper/MSOPT_Conference_Paper.pdf` with all corrections.
+

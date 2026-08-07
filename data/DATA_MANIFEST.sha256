@@ -1,0 +1,14 @@
+# Data Manifest — Frozen CSV Snapshots
+# =====================================
+# These SHA-256 hashes pin the exact data used for the final benchmark run.
+# Any re-download from yfinance may produce different adjusted prices.
+# ALL results in the paper MUST be reproduced from these exact files.
+#
+# Generated: 2026-08-07
+# Source: Yahoo Finance via yfinance (cached 2026-08-06)
+# Date Range: 2010-01-04 to 2025-12-31
+
+aapl_daily_real.csv   384,871 bytes  SHA-256: fc8934204489ae6f75f9fcd540a1395c4bd8f43646655dd137d6c3dd6dccae95
+qqq_daily_real.csv    379,025 bytes  SHA-256: 934a3e2b807f80d1dc5f06b93cf381d73f0316a43ef133f3bec1528f1a065c08
+spy_daily_real.csv    381,858 bytes  SHA-256: 180d357d0847e391f3a8fc3f3cac3d108a3024b9a907d412eb9e96238f36b78a
+tlt_daily_real.csv    373,184 bytes  SHA-256: 3ce42cd2a3f38b06200458b2f6f9b2e4a416e1d05a79767c8a54bc4ae07654c9

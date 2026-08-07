@@ -87,7 +87,14 @@ We evaluate MSOPT under a 10-year expanding walk-forward protocol (2016--2025) a
 \end{table}
 
 \subsection{Discussion of Findings}
-On broad equity index ETFs (\texttt{SPY} and \texttt{QQQ}), MSOPT pattern tokens filter high-frequency noise and prevent excessive position churn. For \texttt{SPY}, MSOPT reduced total position flips over 10 years from 633 down to 71, improving Sharpe ratio from -0.4043 to +0.7589. On single-stock mega-cap momentum (\texttt{AAPL}), persistent trend-following baselines outperformed token-frequency features, highlighting that local shape words are most effective when applied to macro regime filtering.
+
+\textbf{Index ETFs (SPY, QQQ):} On broad equity index ETFs, the technical lag baseline exhibited extreme position churn---633 flips on \texttt{SPY} (paying 42.55\% of capital in compounded fees) and 738 flips on \texttt{QQQ} (50.05\% in fees). MSOPT pattern tokens acted as a structural regime filter, reducing trades to 71 on \texttt{SPY} and 59 on \texttt{QQQ} over 10 years, yielding Sharpe ratios of 0.7589 and 0.7341, respectively.
+
+\textbf{Single-Stock Drift (AAPL):} On \texttt{AAPL}, the technical baseline achieved +2354\% compounded directional trading return. This exceeds AAPL's actual split-adjusted buy-and-hold appreciation of approximately 1,044\% (11.4$\times$) over the same period, which is possible because daily directional compounding can exceed buy-and-hold when short positions capture drawdowns. However, this discrepancy warrants scrutiny: a simple GBDT baseline outperforming buy-and-hold by 2.3$\times$ on a single stock may reflect in-sample signal leakage rather than genuine predictive skill. MSOPT token features performed poorly on \texttt{AAPL} ($-27.66\%$), indicating that local pattern word frequencies are not suited to persistent single-stock momentum drift.
+
+\textbf{Treasury Bonds (TLT):} The baseline's $-99.79\%$ return on \texttt{TLT} requires careful interpretation. TLT's actual buy-and-hold return over 2016--2025 was only $-5.98\%$ (peak-to-trough drawdown: $-48.35\%$). The baseline's near-total capital destruction is \emph{not} a market loss---it is a self-inflicted \textbf{compounded fee death spiral}: the model flipped positions on 37.7\% of trading days (once every 2.7 days), and each flip's 5--10 bps cost compounded multiplicatively through the wealth curve until capital was effectively exhausted by day 1,828 of 2,509 out-of-sample days. MSOPT tokens reduced churn to 147 flips but still lost $-30.64\%$, underperforming a simple buy-and-hold benchmark on this low-volatility asset class.
+
+\textbf{Methodological Caveat:} All numbers in Table~\ref{tab:master_results} are produced from a single deterministic pipeline run (LightGBM with \texttt{random\_state=42}) on frozen CSV data snapshots pinned by SHA-256 hashes (see \texttt{data/DATA\_MANIFEST.sha256}). The classifier used is a gradient-boosted decision tree, not the 2D Conv-Transformer described in Section~3; the neural architecture remains a subject of future work.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
