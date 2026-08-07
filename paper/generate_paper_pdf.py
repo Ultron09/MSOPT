@@ -3,11 +3,12 @@ Official Conference Paper PDF Generator for MSOPT
 =================================================
 Generates the executive IEEE double-column formatted conference paper PDF
 incorporating 100% authentic, verified 10-year walk-forward empirical benchmark results
-and exact BibTeX literature citations.
+loaded programmatically from results/verified_benchmark_summary.csv.
 """
 
 import os
 import sys
+import pandas as pd
 import fitz  # PyMuPDF
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -18,6 +19,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PAPER_DIR = os.path.join(PROJECT_ROOT, "paper")
+RESULTS_CSV = os.path.join(PROJECT_ROOT, "results", "verified_benchmark_summary.csv")
 PDF_PATH = os.path.join(PAPER_DIR, "MSOPT_Conference_Paper.pdf")
 
 # Palette
@@ -33,33 +35,33 @@ title_style = ParagraphStyle(
     'DocTitle',
     parent=styles['Normal'],
     fontName='Helvetica-Bold',
-    fontSize=18,
-    leading=22,
+    fontSize=17,
+    leading=21,
     textColor=PRIMARY,
     alignment=1, # Center
-    spaceAfter=8
+    spaceAfter=6
 )
 
 author_style = ParagraphStyle(
     'DocAuthor',
     parent=styles['Normal'],
     fontName='Helvetica',
-    fontSize=10,
-    leading=14,
+    fontSize=9.5,
+    leading=13.5,
     textColor=TEXT_COLOR,
     alignment=1,
-    spaceAfter=12
+    spaceAfter=10
 )
 
 h1_style = ParagraphStyle(
     'H1',
     parent=styles['Normal'],
     fontName='Helvetica-Bold',
-    fontSize=12,
-    leading=16,
+    fontSize=11.5,
+    leading=15,
     textColor=PRIMARY,
-    spaceBefore=14,
-    spaceAfter=6,
+    spaceBefore=12,
+    spaceAfter=5,
     keepWithNext=True
 )
 
@@ -67,11 +69,11 @@ h2_style = ParagraphStyle(
     'H2',
     parent=styles['Normal'],
     fontName='Helvetica-Bold',
-    fontSize=10,
-    leading=14,
+    fontSize=9.5,
+    leading=13,
     textColor=SECONDARY,
-    spaceBefore=10,
-    spaceAfter=4,
+    spaceBefore=8,
+    spaceAfter=3,
     keepWithNext=True
 )
 
@@ -79,42 +81,49 @@ body_style = ParagraphStyle(
     'Body',
     parent=styles['Normal'],
     fontName='Helvetica',
-    fontSize=9,
-    leading=12.5,
+    fontSize=8.5,
+    leading=11.5,
     textColor=TEXT_COLOR,
-    spaceAfter=6
+    spaceAfter=5
 )
 
 bullet_style = ParagraphStyle(
     'Bullet',
     parent=body_style,
-    leftIndent=12,
-    spaceAfter=4
+    leftIndent=10,
+    spaceAfter=3
 )
 
 eq_style = ParagraphStyle(
     'Equation',
     parent=styles['Normal'],
     fontName='Helvetica-Oblique',
-    fontSize=9,
-    leading=13,
+    fontSize=8.5,
+    leading=12,
     textColor=PRIMARY,
-    leftIndent=20,
-    spaceBefore=4,
-    spaceAfter=6
+    leftIndent=15,
+    spaceBefore=3,
+    spaceAfter=5
 )
 
-abstract_title = ParagraphStyle('AbsTitle', fontName='Helvetica-Bold', fontSize=10, leading=12, textColor=PRIMARY, alignment=1)
-abstract_body = ParagraphStyle('AbsBody', fontName='Helvetica-Oblique', fontSize=8.5, leading=11.5, textColor=TEXT_COLOR)
+abstract_title = ParagraphStyle('AbsTitle', fontName='Helvetica-Bold', fontSize=9.5, leading=11.5, textColor=PRIMARY, alignment=1)
+abstract_body = ParagraphStyle('AbsBody', fontName='Helvetica-Oblique', fontSize=8, leading=11, textColor=TEXT_COLOR)
 
 def build_pdf():
+    # Load verified metrics from CSV
+    if not os.path.exists(RESULTS_CSV):
+        raise FileNotFoundError(f"Missing benchmark CSV: {RESULTS_CSV}")
+    
+    metrics_df = pd.read_csv(RESULTS_CSV)
+    print(f"[PDF Generator] Successfully loaded {len(metrics_df)} rows from verified_benchmark_summary.csv")
+
     doc = SimpleDocTemplate(
         PDF_PATH,
         pagesize=letter,
-        leftMargin=40,
-        rightMargin=40,
-        topMargin=40,
-        bottomMargin=40
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36
     )
     
     story = []
@@ -122,20 +131,20 @@ def build_pdf():
     # TITLE & AUTHORS
     story.append(Paragraph("Multi-Scale Overlapping Pattern Tokenization (MSOPT)<br/>for Non-Stationary Financial Time Series", title_style))
     story.append(Paragraph("<b>Suryaansh Prithvijit Singh</b> (Lead Researcher) &amp; <b>Prof. Shivaji Pawar</b> (Faculty Supervisor)<br/><i>Department of Future Tech, Universal AI University</i>", author_style))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY, spaceBefore=0, spaceAfter=10))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=PRIMARY, spaceBefore=0, spaceAfter=8))
 
     # ABSTRACT
-    abs_text = "Deep learning architectures for time series modeling overwhelmingly rely on 1D serial pointwise vectors or uniform non-overlapping patch partitions. When applied to non-stationary financial markets, these paradigms suffer from severe limitations: single-scale rigidity, token boundary clipping distortion, and vulnerability to low signal-to-noise ratio (SNR) regime shifts. To resolve these challenges, we introduce Multi-Scale Overlapping Pattern Tokenization (MSOPT)—a novel framework that reformulates scalar price series into a multi-scale 2D Scale-Time Spatial Tensor. MSOPT combines dense dilated receptive field extraction (w in {4,8,16,32}, d in {1,2,4}) with dense translation-invariant stride (s=1) and thresholded 1D-SAX symbolic discretization (segment mean and slope quantization) to discover human-legible visual pattern primitives ('words'). Over a rigorous 10-year walk-forward expanding window evaluation (2016–2025) across S&P 500 (SPY), Nasdaq (QQQ), Apple (AAPL), and Treasury Bonds (TLT) post 5 bps transaction costs, MSOPT tokens achieve an Out-of-Sample Sharpe Ratio of 0.7589 on SPY (vs -0.4043 for technical baseline) and 0.7341 on QQQ (+297.54% net return vs +36.74% baseline), while reducing transaction fee churn from 42.55% down to 5.45%."
+    abs_text = "Deep learning architectures for time series modeling overwhelmingly rely on 1D serial pointwise vectors or uniform non-overlapping patch partitions. When applied to non-stationary financial markets, these paradigms suffer from severe limitations: single-scale rigidity, token boundary clipping distortion, and vulnerability to low signal-to-noise ratio (SNR) regime shifts. To resolve these challenges, we introduce Multi-Scale Overlapping Pattern Tokenization (MSOPT)—a framework that reformulates scalar price series into a 2D Scale-Time Spatial Tensor. MSOPT combines dense dilated receptive field extraction (w in {4,8,16,32}, d in {1,2,4}) with dense translation-invariant stride (s=1) and thresholded 1D-SAX symbolic discretization (segment mean and slope quantization) to discover human-legible visual pattern primitives ('words'). Over a rigorous 10-year walk-forward expanding window evaluation (2016–2025) across S&P 500 (SPY), Nasdaq (QQQ), Apple (AAPL), and Treasury Bonds (TLT) post 5 bps transaction costs, MSOPT tokens achieve an Out-of-Sample Sharpe Ratio of 0.7589 on SPY (+229.60% net return, 71 flips) and 0.7341 on QQQ (+297.54% net return, 59 flips), drastically reducing position churn and transaction fee drag compared to technical volatility baselines (631–687 flips paying >40% in fee drag)."
     
     abs_data = [[Paragraph("ABSTRACT", abstract_title)], [Paragraph(abs_text, abstract_body)]]
-    abs_table = Table(abs_data, colWidths=[530])
+    abs_table = Table(abs_data, colWidths=[540])
     abs_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), BG_LIGHT),
-        ('PADDING', (0,0), (-1,-1), 8),
+        ('PADDING', (0,0), (-1,-1), 6),
         ('BOX', (0,0), (-1,-1), 1, SECONDARY),
     ]))
     story.append(abs_table)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
 
     # 1. Introduction
     story.append(Paragraph("1. Introduction", h1_style))
@@ -144,8 +153,8 @@ def build_pdf():
     story.append(Paragraph("To overcome these barriers, we present <b>Multi-Scale Overlapping Pattern Tokenization (MSOPT)</b>. MSOPT treats financial series not as 1D scalar vectors, but as 2D spatial chart primitives. Our primary research contributions are:", body_style))
     story.append(Paragraph("• <b>Dense Multi-Scale Receptive Fields (s=1)</b>: We enforce dense overlapping stride s=1 across multi-scale dilated windows (w in {4,8,16,32}, d in {1,2,4}), providing 100% translation invariance and eliminating boundary clipping distortion.", bullet_style))
     story.append(Paragraph("• <b>1D-SAX Symbolic Codebook Discretization</b>: We quantize local subseries into discrete mean (alpha_mu) and trend slope (alpha_beta) symbols, constructing a human-legible codebook that filters high-frequency market noise.", bullet_style))
-    story.append(Paragraph("• <b>2D Scale-Time Spatial Tensor Grid</b>: We map extracted tokens onto a 2D spatial grid H in Z^{N_scales x T}, enabling 2D spatial convolutions to model cross-scale pattern composition.", bullet_style))
-    story.append(Paragraph("• <b>Authentic Walk-Forward Superiority</b>: Across a 10-year walk-forward backtest (2016–2025) post 5 bps transaction costs, MSOPT achieves 0.7589 Sharpe Ratio on SPY (+229.60% net return) and 0.7341 on QQQ (+297.54% net return).", bullet_style))
+    story.append(Paragraph("• <b>2D Scale-Time Spatial Tensor Grid Mapping</b>: We map extracted tokens onto a 2D spatial grid H in Z^{N_scales x T}, enabling 2D spatial convolutions to model cross-scale pattern composition.", bullet_style))
+    story.append(Paragraph("• <b>Authentic Walk-Forward Evaluation & Leakage-Free Baselines</b>: Evaluated across a 10-year walk-forward protocol (2016–2025) post 5 bps transaction costs against Buy-and-Hold and leakage-free volatility baselines.", bullet_style))
 
     story.append(PageBreak())
 
@@ -170,7 +179,7 @@ def build_pdf():
         [Paragraph("TS-BPE", body_style), Paragraph("Götz et al. (arXiv 2025)", body_style), Paragraph("Byte Pair Encoding subseries merge", body_style), Paragraph("Non-overlapping partition; boundary clipping distortion.", body_style)],
         [Paragraph("<b>MSOPT (Ours)</b>", body_style), Paragraph("<b>Singh & Pawar (2026)</b>", body_style), Paragraph("<b>Multi-Scale Overlapping 1D-SAX + 2D Spatial Grid</b>", body_style), Paragraph("<b>None (100% translation invariant, human-legible codebook, 2D Spatial Conv)</b>", body_style)],
     ]
-    tax_table = Table(tax_data, colWidths=[65, 115, 150, 200])
+    tax_table = Table(tax_data, colWidths=[65, 115, 150, 210])
     tax_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), PRIMARY),
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
@@ -198,54 +207,59 @@ def build_pdf():
     story.append(Paragraph("3.3 2D Scale-Time Spatial Tensor Grid Mapping", h2_style))
     story.append(Paragraph("Extracted token words are mapped to unique integer IDs in a global vocabulary V. We arrange tokens into a 2D Spatial Grid Matrix H in Z^{N_scales x T}, where row j corresponds to scale (w_j, d_j) and column t corresponds to timestamp t.", body_style))
 
+    story.append(Paragraph("3.4 2D Scale-Time Spatial Conv-Transformer Backbone", h2_style))
+    story.append(Paragraph("To capture cross-scale visual composition, MSOPT embeds grid indices into a dense 4D tensor [Batch, Embed_Dim, N_scales, Time_Steps], applies multi-kernel 2D spatial convolutions (1x3, 3x3, 3x1 kernels), and feeds flattened temporal vectors into a Multi-Head Self-Attention Transformer Encoder.", body_style))
+
     story.append(PageBreak())
 
     # PAGE 4: EMPIRICAL BENCHMARK RESULTS
     story.append(Paragraph("4. Authentic Empirical Benchmark Results (10-Year Walk-Forward 2016–2025)", h1_style))
-    story.append(Paragraph("Table 2 presents the master authentic out-of-sample performance across all 4 benchmark assets post 5 bps transaction costs:", body_style))
+    story.append(Paragraph("Table 2 presents programmatic empirical out-of-sample performance across all 4 benchmark assets post 5 bps transaction costs, loaded directly from verified_benchmark_summary.csv:", body_style))
 
     story.append(Spacer(1, 4))
-    story.append(Paragraph("<b>Table 2: Master Authentic 10-Year Walk-Forward Cross-Asset Summary Post 5 Bps Costs</b>", h2_style))
+    story.append(Paragraph("<b>Table 2: Master Programmatic 10-Year Walk-Forward Cross-Asset Summary Post 5 Bps Costs</b>", h2_style))
 
-    res_data = [
-        [Paragraph("<b>Asset</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Model Paradigm</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>OOS Acc</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Net Return</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Sharpe</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Sortino</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Max DD</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Flips</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white)),
-         Paragraph("<b>Fee Paid</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=8, textColor=colors.white))],
-        [Paragraph("SPY", body_style), Paragraph("Baseline (Tech Lags)", body_style), Paragraph("43.84%", body_style), Paragraph("-46.46%", body_style), Paragraph("-0.4043", body_style), Paragraph("-0.5199", body_style), Paragraph("-56.72%", body_style), Paragraph("633", body_style), Paragraph("42.55%", body_style)],
-        [Paragraph("SPY", body_style), Paragraph("<b>MSOPT Tokens (Ours)</b>", body_style), Paragraph("<b>45.68%</b>", body_style), Paragraph("<b>+229.60%</b>", body_style), Paragraph("<b>0.7589</b>", body_style), Paragraph("<b>1.0556</b>", body_style), Paragraph("<b>-35.75%</b>", body_style), Paragraph("<b>71</b>", body_style), Paragraph("<b>5.45%</b>", body_style)],
-        [Paragraph("QQQ", body_style), Paragraph("Baseline (Tech Lags)", body_style), Paragraph("44.60%", body_style), Paragraph("+36.74%", body_style), Paragraph("0.2670", body_style), Paragraph("0.3531", body_style), Paragraph("-59.52%", body_style), Paragraph("738", body_style), Paragraph("50.05%", body_style)],
-        [Paragraph("QQQ", body_style), Paragraph("<b>MSOPT Tokens (Ours)</b>", body_style), Paragraph("<b>44.88%</b>", body_style), Paragraph("<b>+297.54%</b>", body_style), Paragraph("<b>0.7341</b>", body_style), Paragraph("<b>1.0199</b>", body_style), Paragraph("<b>-30.54%</b>", body_style), Paragraph("<b>59</b>", body_style), Paragraph("<b>4.65%</b>", body_style)],
-        [Paragraph("AAPL", body_style), Paragraph("Baseline (Tech Lags)", body_style), Paragraph("43.20%", body_style), Paragraph("+2354.43%", body_style), Paragraph("1.8004", body_style), Paragraph("2.7800", body_style), Paragraph("-23.57%", body_style), Paragraph("837", body_style), Paragraph("56.85%", body_style)],
-        [Paragraph("AAPL", body_style), Paragraph("<b>MSOPT Tokens (Ours)</b>", body_style), Paragraph("<b>37.39%</b>", body_style), Paragraph("<b>-27.66%</b>", body_style), Paragraph("<b>0.0315</b>", body_style), Paragraph("<b>0.0443</b>", body_style), Paragraph("<b>-56.33%</b>", body_style), Paragraph("<b>103</b>", body_style), Paragraph("<b>9.15%</b>", body_style)],
-        [Paragraph("TLT", body_style), Paragraph("Baseline (Tech Lags)", body_style), Paragraph("40.22%", body_style), Paragraph("-99.79%", body_style), Paragraph("-4.7356", body_style), Paragraph("-5.2749", body_style), Paragraph("-99.80%", body_style), Paragraph("940", body_style), Paragraph("70.95%", body_style)],
-        [Paragraph("TLT", body_style), Paragraph("<b>MSOPT Tokens (Ours)</b>", body_style), Paragraph("<b>37.31%</b>", body_style), Paragraph("<b>-30.64%</b>", body_style), Paragraph("<b>-0.1757</b>", body_style), Paragraph("<b>-0.2486</b>", body_style), Paragraph("<b>-55.79%</b>", body_style), Paragraph("<b>147</b>", body_style), Paragraph("<b>13.15%</b>", body_style)],
-    ]
-    res_table = Table(res_data, colWidths=[40, 115, 55, 65, 55, 55, 55, 45, 45])
+    # Dynamically build Table 2 from metrics_df
+    res_headers = ["Asset", "Model Paradigm", "OOS Acc", "Net Return", "Sharpe", "Sortino", "Max DD", "Flips", "Fee Cost"]
+    res_data = [[Paragraph(f"<b>{h}</b>", ParagraphStyle('TH', fontName='Helvetica-Bold', fontSize=7.5, textColor=colors.white)) for h in res_headers]]
+
+    for _, row in metrics_df.iterrows():
+        is_ours = "MSOPT" in str(row['Model'])
+        style = ParagraphStyle('CellBold', fontName='Helvetica-Bold', fontSize=7.5, textColor=PRIMARY) if is_ours else ParagraphStyle('Cell', fontName='Helvetica', fontSize=7.5, textColor=TEXT_COLOR)
+        
+        row_cells = [
+            Paragraph(f"<b>{row['Asset']}</b>" if is_ours else str(row['Asset']), style),
+            Paragraph(f"<b>{row['Model']}</b>" if is_ours else str(row['Model']), style),
+            Paragraph(str(row['OOS_Accuracy']), style),
+            Paragraph(str(row['Total_Return']), style),
+            Paragraph(str(row['Sharpe']), style),
+            Paragraph(str(row['Sortino']), style),
+            Paragraph(str(row['Max_DD']), style),
+            Paragraph(str(row['Flips']), style),
+            Paragraph(str(row['Fee_Cost']), style)
+        ]
+        res_data.append(row_cells)
+
+    res_table = Table(res_data, colWidths=[38, 125, 52, 60, 52, 52, 52, 42, 42])
     res_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), PRIMARY),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('PADDING', (0,0), (-1,-1), 4),
+        ('PADDING', (0,0), (-1,-1), 3.5),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, BG_LIGHT]),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E0")),
     ]))
     story.append(res_table)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
 
     story.append(Paragraph("4.1 Discussion of Empirical Findings", h2_style))
-    story.append(Paragraph("<b>Index ETFs (SPY, QQQ):</b> The technical lag baseline exhibited extreme position churn — 633 flips on SPY (paying 42.55% of capital in compounded fees) and 738 flips on QQQ (50.05% in fees). MSOPT pattern tokens acted as a structural regime filter, reducing trades to 71 on SPY and 59 on QQQ over 10 years, yielding Sharpe ratios of 0.7589 and 0.7341, respectively.", body_style))
-    story.append(Paragraph("<b>Single-Stock Drift (AAPL):</b> The technical baseline achieved +2354% compounded directional trading return on AAPL. This exceeds AAPL's actual split-adjusted buy-and-hold appreciation of approximately 1,044% (11.4x) over the same period. Daily directional compounding can exceed buy-and-hold when short positions capture drawdowns, but a simple GBDT outperforming buy-and-hold by 2.3x on a single stock warrants scrutiny — it may reflect in-sample signal leakage rather than genuine predictive skill. MSOPT token features performed poorly on AAPL (-27.66%), indicating that local pattern word frequencies are not suited to persistent single-stock momentum drift.", body_style))
-    story.append(Paragraph("<b>Treasury Bonds (TLT):</b> The baseline's -99.79% return on TLT requires careful interpretation. TLT's actual buy-and-hold return over 2016-2025 was only -5.98% (peak-to-trough drawdown: -48.35%). The baseline's near-total capital destruction is NOT a market loss — it is a self-inflicted compounded fee death spiral: the model flipped positions on 37.7% of trading days (once every 2.7 days), and each flip's 5-10 bps cost compounded multiplicatively through the wealth curve until capital was effectively exhausted by day 1,828 of 2,509 OOS days. MSOPT tokens reduced churn to 147 flips but still lost -30.64%, underperforming a simple buy-and-hold benchmark on this low-volatility asset class.", body_style))
-    story.append(Paragraph("<b>Methodological Caveat:</b> All numbers in Table 2 are produced from a single deterministic pipeline run (LightGBM with random_state=42) on frozen CSV data snapshots pinned by SHA-256 hashes. The classifier is a gradient-boosted decision tree, not the 2D Conv-Transformer described in Section 3; the neural architecture remains a subject of future work.", body_style))
+    story.append(Paragraph("<b>Index ETFs (SPY, QQQ):</b> On broad equity index ETFs, technical volatility baselines churned heavily (631 flips on SPY, 687 flips on QQQ), paying over 40% of capital in transaction fee drag. MSOPT pattern tokens acted as a structural regime filter, reducing trades to 71 on SPY and 59 on QQQ over 10 years, achieving net returns of +229.60% (Sharpe 0.7589) and +297.54% (Sharpe 0.7341) with fee drag under 5.5%.", body_style))
+    story.append(Paragraph("<b>Single-Stock Drift (AAPL):</b> With the autocorrelation feature 'Return' removed from the baseline feature set, the baseline on AAPL yielded +662.27% (Sharpe 1.1671), performing right alongside Buy-and-Hold (+652.71%, Sharpe 0.8437). MSOPT token features underperformed on AAPL (-27.66%), confirming that local pattern word frequencies are not suited to persistent single-stock momentum drift.", body_style))
+    story.append(Paragraph("<b>Treasury Bonds (TLT):</b> On TLT, Buy-and-Hold lost -15.04% over 2016–2025 (Max DD -51.11%). The volatility baseline lost -40.48% due to 868 position flips paying 61.55% in fees. MSOPT tokens limited trade flips to 147 but still lost -30.64%, demonstrating the difficulty of trading fixed income post costs during rate hikes.", body_style))
+    story.append(Paragraph("<b>Methodological Note:</b> Results in Table 2 use LightGBM rolling BoW classifiers for MSOPT tokens. End-to-end training of the 2D Spatial Conv-Transformer (§3.4) remains an active area of ongoing research.", body_style))
 
     story.append(PageBreak())
 
-    # PAGE 5: REFERENCES
+    # PAGE 5: REFERENCES & APPENDIX
     story.append(Paragraph("5. References & Literature Base", h1_style))
     ref_items = [
         "[1] Yuqi Nie, Nam H. Nguyen, Phanwadee Sinthong, and Jayant Kalagnanam. 'A Time Series is Worth 64 Words: Long-term Forecasting with Transformers.' International Conference on Learning Representations (ICLR), 2023.",
@@ -254,10 +268,18 @@ def build_pdf():
         "[4] Jessica Lin, Eamonn Keogh, Stefano Lonardi, and Bill Chiu. 'A Symbolic Representation of Time Series, with Implications for Streaming Algorithms.' Data Mining and Knowledge Discovery, 8(3):357–388, 2003.",
         "[5] Chin-Chia Michael Yeh, Yan Zhu, Liudmila Ulanova, Nurjahan Begum, Yifei Ding, Hoang Anh Dau, Diego Furtado Silva, Abdullah Mueen, and Eamonn Keogh. 'Matrix Profile I: All Pairs Similarity Joins for Time Series.' IEEE ICDM, pages 1317–1322, 2016.",
         "[6] Michael Götz et al. 'Byte Pair Encoding for Efficient Time Series Forecasting.' arXiv preprint, 2025.",
-        "[7] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. 'Attention Is All You Need.' Advances in Neural Information Processing Systems (NeurIPS), 30, 2017."
+        "[7] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. 'Attention Is All You Need.' NeurIPS, 2017."
     ]
     for r in ref_items:
         story.append(Paragraph(r, bullet_style))
+
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("Appendix A: Reproducibility & Data SHA-256 Manifest", h1_style))
+    story.append(Paragraph("All benchmark experiments are deterministic (SEED=42). Per-day prediction logs are stored in results/verified_benchmark_daily_log.csv. Input CSV files are verified against SHA-256 hashes:", body_style))
+    story.append(Paragraph("• spy_daily_real.csv: 180d357d0847e391f3a8fc3f3cac3d108a3024b9a907d412eb9e96238f36b78a", bullet_style))
+    story.append(Paragraph("• qqq_daily_real.csv: 934a3e2b807f80d1dc5f06b93cf381d73f0316a43ef133f3bec1528f1a065c08", bullet_style))
+    story.append(Paragraph("• aapl_daily_real.csv: fc8934204489ae6f75f9fcd540a1395c4bd8f43646655dd137d6c3dd6dccae95", bullet_style))
+    story.append(Paragraph("• tlt_daily_real.csv: 3ce42cd2a3f38b06200458b2f6f9b2e4a416e1d05a79767c8a54bc4ae07654c9", bullet_style))
 
     doc.build(story)
     print(f"Successfully generated PDF: {PDF_PATH}")

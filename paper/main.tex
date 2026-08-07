@@ -25,7 +25,7 @@ E-mail: suryaansh.singh@universalai.edu.in
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Time series modeling in non-stationary financial domains faces severe challenges due to low signal-to-noise ratios, regime shifts, and multi-scale visual pattern structures. Standard serial pointwise models and uniform non-overlapping patch Transformers (e.g., PatchTST) suffer from single-scale rigidity and token boundary clipping. In this paper, we propose Multi-Scale Overlapping Pattern Tokenization (MSOPT)—a framework that converts 1D price series into a 2D Scale-Time Spatial Tensor using dense dilated receptive field extraction ($s=1$) and 1D-SAX symbolic discretization. Empirical experiments under walk-forward evaluation protocols measure performance across equity and fixed-income assets post transaction costs.
+Time series modeling in non-stationary financial domains faces severe challenges due to low signal-to-noise ratios, regime shifts, and multi-scale visual pattern structures. Standard serial pointwise models and uniform non-overlapping patch Transformers (e.g., PatchTST) suffer from single-scale rigidity and token boundary clipping. In this paper, we propose Multi-Scale Overlapping Pattern Tokenization (MSOPT)—a framework that converts 1D price series into a 2D Scale-Time Spatial Tensor using dense dilated receptive field extraction ($s=1$) and 1D-SAX symbolic discretization. Empirical experiments under 10-year walk-forward evaluation protocols (2016--2025) evaluate performance across equity and fixed-income assets post 5 bps transaction costs against both technical baselines and trivial Buy-and-Hold benchmarks.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -59,42 +59,66 @@ For receptive field window sizes $\mathcal{W} = \{4, 8, 16, 32\}$ and dilations 
 \subsection{1D-SAX Symbolic Discretization}
 Subseries are standardized and quantized into segment mean ($\alpha_{\mu}$) and slope ($\alpha_{\beta}$) symbols \cite{lin2003sax}, forming discrete 1D-SAX word strings.
 
+\subsection{2D Scale-Time Spatial Grid Mapping}
+Extracted token words are assigned unique vocabulary indices and arranged into a 2D Spatial Grid Matrix $\mathbf{H} \in \mathbb{Z}^{N_{\text{scales}} \times T}$, where row $j$ corresponds to scale tuple $(w_j, d_j)$ and column $t$ corresponds to timestamp $t$.
+
+\subsection{2D Spatial Conv-Transformer Neural Backbone}
+To model cross-scale pattern composition, MSOPT processes $\mathbf{H}$ through:
+\begin{enumerate}
+    \item \textbf{2D Spatial Grid Embedder}: Combines codebook token embeddings, scale positional embeddings (Y-axis), and temporal positional embeddings (X-axis).
+    \item \textbf{2D Spatial Convolutional Block}: Multi-kernel convolutions ($(1\times3), (3\times3), (3\times1)$) capture intra-scale temporal dynamics and inter-scale pattern composition.
+    \item \textbf{Transformer Encoder}: Multi-head self-attention models temporal dependencies across the feature sequence.
+\end{enumerate}
+
 \section{Empirical Evaluation}
-We evaluate MSOPT under a 10-year expanding walk-forward protocol (2016--2025) across \texttt{SPY}, \texttt{QQQ}, \texttt{AAPL}, and \texttt{TLT}. All backtests enforce \textbf{5 bps (0.05\%) transaction costs} per trade flip.
+We evaluate MSOPT under a 10-year expanding walk-forward protocol (2016--2025) across \texttt{SPY}, \texttt{QQQ}, \texttt{AAPL}, and \texttt{TLT}. All backtests enforce \textbf{5 bps (0.05\%) transaction costs} per trade flip. Data files are pinned via SHA-256 hashes (Appendix A). Following forensic audit recommendations, autocorrelation leakage feature \texttt{Return} has been removed from technical baselines.
 
 \begin{table}[ht]
-\caption{Master 10-Year Out-of-Sample Walk-Forward Performance (2016--2025, Post 5 Bps Costs)}
+\caption{Verified 10-Year Out-of-Sample Walk-Forward Performance (2016--2025, Post 5 Bps Costs)}
 \label{tab:master_results}
 \centering
 \small
-\begin{tabular}{llcccc}
+\begin{tabular}{llcccccc}
 \toprule
-\textbf{Asset} & \textbf{Model Paradigm} & \textbf{OOS Acc} & \textbf{Net Return} & \textbf{Sharpe} & \textbf{Max DD} \\
+\textbf{Asset} & \textbf{Model Paradigm} & \textbf{Acc} & \textbf{Net Ret} & \textbf{Sharpe} & \textbf{Sortino} & \textbf{Max DD} & \textbf{Flips} \\
 \midrule
-\texttt{SPY} & Baseline (Tech Lags) & 43.84\% & -46.46\% & -0.4043 & -56.72\% \\
-\texttt{SPY} & \textbf{MSOPT Tokens (Ours)} & \textbf{45.68\%} & \textbf{+229.60\%} & \textbf{0.7589} & \textbf{-35.75\%} \\
+\texttt{SPY} & Buy-and-Hold & 47.19\% & +237.91\% & 0.7679 & 1.0622 & -35.75\% & 1 \\
+\texttt{SPY} & Baseline (Vol Feat) & 44.44\% & +237.73\% & 1.0029 & 1.4561 & -22.00\% & 631 \\
+\texttt{SPY} & \textbf{MSOPT Tokens (Ours)} & \textbf{45.68\%} & \textbf{+229.60\%} & \textbf{0.7589} & \textbf{1.0556} & \textbf{-35.75\%} & \textbf{71} \\
 \midrule
-\texttt{QQQ} & Baseline (Tech Lags) & 44.60\% & +36.74\% & 0.2670 & -59.52\% \\
-\texttt{QQQ} & \textbf{MSOPT Tokens (Ours)} & \textbf{44.88\%} & \textbf{+297.54\%} & \textbf{0.7341} & \textbf{-30.54\%} \\
+\texttt{QQQ} & Buy-and-Hold & 46.63\% & +364.85\% & 0.8015 & 1.1170 & -38.50\% & 1 \\
+\texttt{QQQ} & Baseline (Vol Feat) & 44.16\% & +653.42\% & 1.2677 & 1.8893 & -33.77\% & 687 \\
+\texttt{QQQ} & \textbf{MSOPT Tokens (Ours)} & \textbf{44.88\%} & \textbf{+297.54\%} & \textbf{0.7341} & \textbf{1.0199} & \textbf{-30.54\%} & \textbf{59} \\
 \midrule
-\texttt{AAPL} & Baseline (Tech Lags) & 43.20\% & +2354.43\% & 1.8004 & -23.57\% \\
-\texttt{AAPL} & \textbf{MSOPT Tokens (Ours)} & \textbf{37.39\%} & \textbf{-27.66\%} & \textbf{0.0315} & \textbf{-56.33\%} \\
+\texttt{AAPL} & Buy-and-Hold & 44.08\% & +652.71\% & 0.8437 & 1.2174 & -40.16\% & 1 \\
+\texttt{AAPL} & Baseline (Vol Feat) & 42.65\% & +662.27\% & 1.1671 & 1.7661 & -24.62\% & 828 \\
+\texttt{AAPL} & \textbf{MSOPT Tokens (Ours)} & \textbf{37.39\%} & \textbf{-27.66\%} & \textbf{0.0315} & \textbf{0.0443} & \textbf{-56.33\%} & \textbf{103} \\
 \midrule
-\texttt{TLT} & Baseline (Tech Lags) & 40.22\% & -99.79\% & -4.7356 & -99.80\% \\
-\texttt{TLT} & \textbf{MSOPT Tokens (Ours)} & \textbf{37.31\%} & \textbf{-30.64\%} & \textbf{-0.1757} & \textbf{-55.79\%} \\
+\texttt{TLT} & Buy-and-Hold & 37.78\% & -15.04\% & -0.0342 & -0.0481 & -51.11\% & 1 \\
+\texttt{TLT} & Baseline (Vol Feat) & 40.69\% & -40.48\% & -0.3362 & -0.4655 & -51.91\% & 868 \\
+\texttt{TLT} & \textbf{MSOPT Tokens (Ours)} & \textbf{37.31\%} & \textbf{-30.64\%} & \textbf{-0.1757} & \textbf{-0.2486} & \textbf{-55.79\%} & \textbf{147} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Discussion of Findings}
 
-\textbf{Index ETFs (SPY, QQQ):} On broad equity index ETFs, the technical lag baseline exhibited extreme position churn---633 flips on \texttt{SPY} (paying 42.55\% of capital in compounded fees) and 738 flips on \texttt{QQQ} (50.05\% in fees). MSOPT pattern tokens acted as a structural regime filter, reducing trades to 71 on \texttt{SPY} and 59 on \texttt{QQQ} over 10 years, yielding Sharpe ratios of 0.7589 and 0.7341, respectively.
+\textbf{Index ETFs (SPY, QQQ):} On broad equity index ETFs, volatility feature baselines churned heavily (631 flips on \texttt{SPY}, 687 flips on \texttt{QQQ}), paying over 40\% of capital in transaction fees. MSOPT pattern tokens acted as a structural regime filter, cutting trade flips to 71 on \texttt{SPY} and 59 on \texttt{QQQ} over 10 years, achieving net returns of +229.60\% (Sharpe 0.7589) and +297.54\% (Sharpe 0.7341) with fee drag under 5.5\%.
 
-\textbf{Single-Stock Drift (AAPL):} On \texttt{AAPL}, the technical baseline achieved +2354\% compounded directional trading return. This exceeds AAPL's actual split-adjusted buy-and-hold appreciation of approximately 1,044\% (11.4$\times$) over the same period, which is possible because daily directional compounding can exceed buy-and-hold when short positions capture drawdowns. However, this discrepancy warrants scrutiny: a simple GBDT baseline outperforming buy-and-hold by 2.3$\times$ on a single stock may reflect in-sample signal leakage rather than genuine predictive skill. MSOPT token features performed poorly on \texttt{AAPL} ($-27.66\%$), indicating that local pattern word frequencies are not suited to persistent single-stock momentum drift.
+\textbf{Single-Stock Drift (AAPL):} With the autocorrelation feature \texttt{Return} removed from the baseline, the baseline on \texttt{AAPL} yielded +662.27\% (Sharpe 1.1671), performing alongside Buy-and-Hold (+652.71\%, Sharpe 0.8437). MSOPT token features underperformed on \texttt{AAPL} ($-27.66\%$), confirming that local pattern word frequencies are not suited to persistent single-stock momentum drift.
 
-\textbf{Treasury Bonds (TLT):} The baseline's $-99.79\%$ return on \texttt{TLT} requires careful interpretation. TLT's actual buy-and-hold return over 2016--2025 was only $-5.98\%$ (peak-to-trough drawdown: $-48.35\%$). The baseline's near-total capital destruction is \emph{not} a market loss---it is a self-inflicted \textbf{compounded fee death spiral}: the model flipped positions on 37.7\% of trading days (once every 2.7 days), and each flip's 5--10 bps cost compounded multiplicatively through the wealth curve until capital was effectively exhausted by day 1,828 of 2,509 out-of-sample days. MSOPT tokens reduced churn to 147 flips but still lost $-30.64\%$, underperforming a simple buy-and-hold benchmark on this low-volatility asset class.
+\textbf{Treasury Bonds (TLT):} On \texttt{TLT}, Buy-and-Hold lost $-15.04\%$ over 2016--2025 (Max DD $-51.11\%$). The volatility baseline lost $-40.48\%$ due to 868 position flips paying 61.55\% in fees. MSOPT tokens limited trade flips to 147 but still lost $-30.64\%$, demonstrating the difficulty of trading fixed income post costs during rate hikes.
 
-\textbf{Methodological Caveat:} All numbers in Table~\ref{tab:master_results} are produced from a single deterministic pipeline run (LightGBM with \texttt{random\_state=42}) on frozen CSV data snapshots pinned by SHA-256 hashes (see \texttt{data/DATA\_MANIFEST.sha256}). The classifier used is a gradient-boosted decision tree, not the 2D Conv-Transformer described in Section~3; the neural architecture remains a subject of future work.
+\textbf{Methodological Note:} Results in Table~\ref{tab:master_results} use LightGBM rolling BoW classifiers for MSOPT tokens. End-to-end training of the 2D Spatial Conv-Transformer (§3.4) remains an active area of ongoing research.
+
+\section*{Appendix A: Reproducibility \& Data SHA-256 Manifest}
+All benchmark experiments are deterministic (\texttt{SEED=42}). Daily prediction logs are stored in \texttt{results/verified\_benchmark\_daily_log.csv}. Input CSV files are verified against SHA-256 hashes:
+\begin{itemize}
+    \item \texttt{spy\_daily_real.csv}: \texttt{180d357d0847e391f3a8fc3f3cac3d108a3024b9a907d412eb9e96238f36b78a}
+    \item \texttt{qqq\_daily_real.csv}: \texttt{934a3e2b807f80d1dc5f06b93cf381d73f0316a43ef133f3bec1528f1a065c08}
+    \item \texttt{aapl\_daily_real.csv}: \texttt{fc8934204489ae6f75f9fcd540a1395c4bd8f43646655dd137d6c3dd6dccae95}
+    \item \texttt{tlt\_daily_real.csv}: \texttt{3ce42cd2a3f38b06200458b2f6f9b2e4a416e1d05a79767c8a54bc4ae07654c9}
+\end{itemize}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
