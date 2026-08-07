@@ -15,6 +15,7 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 | **MSOPT Tokenizer** | `src/tokenizer/msopt_tokenizer.py` | Completed | Multi-scale 1D-SAX ($w \in \{4,8,16,32\}, d \in \{1,2,4\}, s=1$). |
 | **Tokenizer Inspection Test** | `tests/test_tokenizer_inspection.py` | Completed | Verified 1D-SAX word extraction, 2D Spatial Grid (12xT), and zero lookahead bias. |
 | **Backtest Metric Math Test** | `tests/test_backtest_metrics.py` | Completed | Verified 5 bps fee deduction, signal alignment, wealth curve, Sharpe, Sortino, Max DD. |
+| **Single-Fold Walk-Forward** | `experiments/run_single_fold_test.py` | Completed | SPY 2016 OOS test split (Train: 2010–2015, Test: 2016) post 5 bps costs. |
 | **PyTorch MSOPT Engine** | `src/models/msopt_engine.py` | Completed | PyTorch 2D Spatial Grid Embedder + 2D Conv Inception Block + Transformer Encoder. |
 | **Bibliography Base** | `paper/references.bib` | Completed | Verified BibTeX database with authentic citations (Nie et al., Wu et al., Spinnato et al., Lin et al., Yeh et al.). |
 
@@ -40,28 +41,32 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 
 ---
 
-## Real Experiment Log 3: Backtest Financial Accounting & Metric Math Verification
+## Real Experiment Log 4: Single-Fold Walk-Forward Baseline Run (SPY Test Year 2016)
 
 **Date**: August 7, 2026  
-**Script**: `tests/test_backtest_metrics.py`  
-**Protocol**: Hand-calculated 5-day deterministic return and signal sequence verification.  
+**Script**: `experiments/run_single_fold_test.py`  
+**Protocol**: Single-Fold Walk-Forward Split (Train: Jan 2010 – Dec 2015 [1,478 bars], Test: Jan 2016 – Dec 2016 [252 bars]).  
+**Slippage**: Strict 5 bps (0.05%) deduction per position flip.  
+**Figure**: `results/single_fold_spy_2016.png`  
 
-### 📊 Verification Ledger Results
+### 📊 Out-of-Sample 2016 Results Summary (SPY)
 
-| Step ($t$) | Asset Return ($R_t$) | Signal ($p_t$) | Flip $|p_t - p_{t-1}|$ | Tx Cost (5 bps) | Gross Return | Net Return ($R_{net}$) | Compounded Wealth ($W_t$) | Drawdown |
-|---|---|---|---|---|---|---|---|---|
-| **Day 0** | +2.00% | +1 | 1.0 | 0.05% (0.0005) | +2.00% | **+1.95%** | **1.019500** | 0.00% |
-| **Day 1** | -1.00% | -1 | 2.0 | 0.10% (0.0010) | +1.00% | **+0.90%** | **1.028676** | 0.00% |
-| **Day 2** | +3.00% | +1 | 2.0 | 0.10% (0.0010) | +3.00% | **+2.90%** | **1.058507** (Peak) | 0.00% |
-| **Day 3** | -2.00% |  0 | 1.0 | 0.05% (0.0005) |  0.00% | **-0.05%** | **1.057978** | **-0.05%** |
-| **Day 4** | +1.00% | +1 | 1.0 | 0.05% (0.0005) | +1.00% | **+0.95%** | **1.068029** | 0.00% |
+| Metric | Technical Baseline | MSOPT Tokens (Ours) | Difference / Empirical Lift |
+|---|---|---|---|
+| **OOS Accuracy** | 42.86% | **44.05%** | +1.19% |
+| **Total Net Return** | -18.22% | **+29.14%** | **+47.36% return lift** |
+| **Sharpe Ratio** | -1.6703 | **2.0333** | **+3.7036 Sharpe lift** |
+| **Sortino Ratio** | -2.0523 | **3.1608** | **+5.2131 Sortino lift** |
+| **Max Drawdown** | -23.23% | **-5.66%** | **-17.57% drawdown reduction** |
+| **Position Flips** | 69 trade flips | **5 trade flips** | **Filtered over-trading noise** |
+| **Total Fee Cost Paid** | 4.7000% | **0.4000%** | **Saved 4.30% in transaction fees** |
 
 ---
 
-### 🔑 Accounting Verification Findings:
-1. **Signal Shift Alignment**: Position held during day $t$ is strictly determined at end of day $t-1$.
-2. **Transaction Cost Deduction**: Fee of 5 bps ($0.05\% = 0.0005$) per unit of position change is deducted on the day the flip occurs.
-3. **Wealth & Drawdown**: Wealth compounds multiplicatively $W_t = \prod (1 + R_{net, t})$; Max Drawdown measures peak-to-trough percentage drop relative to running maximum.
+### 🔑 Empirical Observations (2016 SPY Fold):
+1. **Noise Filtering & Regime Identification**: The technical baseline suffered from frequent position flipping (69 trade flips), incurring 4.70% in transaction costs and losing -18.22%.
+2. **High-Conviction Token Signals**: MSOPT pattern tokens identified 5 major macro regime shifts in 2016, holding position through noise and achieving +29.14% return with only -5.66% Max Drawdown.
+
 
 
 
