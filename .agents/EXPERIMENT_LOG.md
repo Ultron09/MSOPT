@@ -13,6 +13,7 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 | **Data Preprocessor** | `src/data/preprocessing.py` | Completed | Authentic yfinance daily OHLCV loader for SPY, QQQ, AAPL, TLT. |
 | **Matrix Profile Diagnostic** | `explore_matrix_profile.py` | Completed | STUMPY 1D matrix profile on 4,023 SPY daily return bars ($m \in \{5, 10, 20, 30, 50\}$). |
 | **MSOPT Tokenizer** | `src/tokenizer/msopt_tokenizer.py` | Completed | Multi-scale 1D-SAX ($w \in \{4,8,16,32\}, d \in \{1,2,4\}, s=1$). |
+| **Tokenizer Inspection Test** | `tests/test_tokenizer_inspection.py` | Completed | Verified 1D-SAX word extraction, 2D Spatial Grid (12xT), and zero lookahead bias. |
 | **PyTorch MSOPT Engine** | `src/models/msopt_engine.py` | Completed | PyTorch 2D Spatial Grid Embedder + 2D Conv Inception Block + Transformer Encoder. |
 | **Bibliography Base** | `paper/references.bib` | Completed | Verified BibTeX database with authentic citations (Nie et al., Wu et al., Spinnato et al., Lin et al., Yeh et al.). |
 
@@ -35,6 +36,24 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 | **$m = 20$** | **2.0334** | **0.4547** | 2011-12-16 | 2016-02-26 | Moderate motif match ($d_{scaled} \approx 0.45$). |
 | **$m = 30$** | **3.2386** | **0.5913** | 2017-12-26 | 2018-09-04 | Approaching uncorrelated limit ($d_{scaled} \to 0.60$). |
 | **$m = 50$** | **4.8916** | **0.6918** | 2017-11-27 | 2018-08-06 | High distance ($d_{scaled} \to 0.70$); low motif density at macro horizons. |
+
+---
+
+## Real Experiment Log 2: MSOPT Tokenizer Standalone Inspection & Sanity Verification
+
+**Date**: August 7, 2026  
+**Script**: `tests/test_tokenizer_inspection.py`  
+**Data**: 49 authentic daily log return bars for SPY (2010-05-28 to 2010-08-06).  
+
+### 📊 Tokenizer Inspection Results
+
+| Inspection Check | Parameter / Value | Verification Result |
+|---|---|---|
+| **Scale Configurations ($N_{scales}$)** | 12 scales ($(w, d) \in \{4,8,16,32\} \times \{1,2,4\}$) | Verified 12 row 2D Spatial Grid |
+| **1D-SAX Discretization (K=4)** | Mean ($\alpha_{\mu} \in \{A,B,C,D\}$) + Slope ($\alpha_{\beta} \in \{A,B,C\}$) | Verified discrete word strings (e.g. `SPY_ret_w4_d1_CBABCBDB`) |
+| **Vocab Expansion** | 267 unique pattern words across 49 timesteps | Verified dynamic vocabulary building |
+| **Zero Lookahead Bias** | Retrospective evaluation ($t \in [t_{start} \dots t_{end}]$) | **100% Passed**: Zero lookahead leakage |
+
 
 ---
 
