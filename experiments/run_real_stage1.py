@@ -1,207 +1,160 @@
 """
-Real Stage 1 Walk-Forward Benchmark Execution Engine
-====================================================
-Performs a zero-shortcut, 10-year expanding walk-forward evaluation (2016-2025)
-on authentic SPY, AAPL, QQQ, and TLT daily data.
+Full 10-Year Multi-Asset Expanding Walk-Forward Benchmark (2016–2025)
+=======================================================================
+Evaluates MSOPT pattern tokens vs Technical Baseline across SPY, QQQ, AAPL, and TLT.
 
-Enforces:
-1. Strict Walk-Forward (Train < Test Year, Zero Lookahead)
-2. Accurate 5 Bps Slippage & Transaction Cost Accounting
-3. Real Directional Accuracy, Macro F1, Sharpe, Sortino, Max Drawdown
+Protocol:
+- 10 Annual Expanding Walk-Forward Test Folds (2016, 2017, ..., 2025)
+- Initial Train Window: Jan 2010 to Dec 2015
+- Target: Fork B Directional Move y_dir in {-1, 0, +1} (H=5 days, delta=0.5 sigma)
+- Slippage: Strict 5 bps (0.05%) deduction per position flip
 """
 
 import os
 import sys
 import numpy as np
 import pandas as pd
-import lightgbm as lgb
-from sklearn.metrics import accuracy_score, f1_score
-from typing import Tuple, List, Dict
-import warnings
-warnings.filterwarnings('ignore')
+from lightgbm import LGBMClassifier
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from src.data.preprocessing import fetch_and_clean_ticker, build_real_features_and_targets
 from src.tokenizer.msopt_tokenizer import MSOPTTokenizer
+from tests.test_backtest_metrics import calculate_backtest_metrics
 
-RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results", "real_stage1")
-os.makedirs(RESULTS_DIR, exist_ok=True)
-
-def build_baseline_features(df: pd.DataFrame, lags: int = 20) -> pd.DataFrame:
-    """Build standard technical momentum and lag features."""
-    feats = pd.DataFrame(index=df.index)
-    for i in range(1, lags + 1):
-        feats[f'lag_{i}'] = df['Return'].shift(i)
+def run_asset_walk_forward(ticker: str) -> pd.DataFrame:
+    print(f"\n{'='*70}\n  RUNNING 10-YEAR WALK-FORWARD BENCHMARK: {ticker}\n{'='*70}")
     
-    feats['vol_10'] = df['Parkinson_Vol'].rolling(10).mean()
-    feats['vol_30'] = df['Parkinson_Vol'].rolling(30).mean()
-    feats['rel_vol'] = df['Rel_Volume']
-    feats['mom_5'] = df['Return'].rolling(5).sum()
-    feats['mom_20'] = df['Return'].rolling(20).sum()
-    return feats
-
-def compute_real_strategy_metrics(
-    daily_returns: np.ndarray,
-    positions: np.ndarray,
-    fee_bps: float = 0.0005
-) -> Tuple[float, float, float]:
-    """
-    Computes exact strategy metrics post 5 bps transaction costs.
+    csv_path = os.path.join(PROJECT_ROOT, "data", f"{ticker.lower()}_daily_real.csv")
+    df = fetch_and_clean_ticker(ticker)
+    df = build_real_features_and_targets(df, horizon=5, delta_vol=0.5)
+    df = df.dropna().copy()
     
-    positions: array of predicted signals in {-1, 0, 1}
-    daily_returns: actual daily log returns R_t
-    """
-    # Align position signal: signal predicted at end of day t-1 applies to return at day t
-    pos_shifted = np.roll(positions, 1)
-    pos_shifted[0] = 0 # No position on first day
-    
-    # Calculate trades (position changes)
-    trade_flips = np.abs(np.diff(pos_shifted, prepend=0))
-    trade_costs = trade_flips * fee_bps
-    
-    # Simple returns for wealth accumulation
-    simple_returns = np.exp(daily_returns) - 1.0
-    
-    # Strategy daily returns after deduction of costs
-    strat_daily_rets = pos_shifted * simple_returns - trade_costs
-    
-    # Annualized Sharpe Ratio (252 trading days)
-    mean_daily = np.mean(strat_daily_rets)
-    std_daily = np.std(strat_daily_rets) + 1e-8
-    sharpe = (mean_daily * 252.0) / (std_daily * np.sqrt(252.0))
-    
-    # Annualized Sortino Ratio (downside volatility only)
-    downside = strat_daily_rets[strat_daily_rets < 0]
-    downside_std = np.std(downside) * np.sqrt(252.0) + 1e-8 if len(downside) > 0 else 1e-8
-    sortino = (mean_daily * 252.0) / downside_std
-    
-    # Maximum Drawdown from wealth curve
-    wealth_curve = np.cumprod(1.0 + strat_daily_rets)
-    peak = np.maximum.accumulate(wealth_curve)
-    drawdowns = (wealth_curve - peak) / peak
-    max_dd = float(np.min(drawdowns))
-    
-    return float(sharpe), float(sortino), max_dd
-
-
-def evaluate_ticker_walk_forward(ticker: str) -> pd.DataFrame:
-    print(f"\n{'='*70}\n  RUNNING REAL 10-YEAR WALK-FORWARD EVALUATION: {ticker}\n{'='*70}")
-    raw_df = fetch_and_clean_ticker(ticker)
-    df = build_real_features_and_targets(raw_df, horizon=5)
-    
-    # 1. Technical Baseline Features
-    tech_feats = build_baseline_features(df, lags=20)
-    
-    # 2. MSOPT 1D-SAX Tokens
-    print("  [MSOPT Tokenizer] Extracting authentic multi-scale 1D-SAX tokens...")
     returns = df['Return'].values
+    
+    print(f"  [Tokenizer] Extracting multi-scale 1D-SAX tokens for {ticker}...")
     tokenizer = MSOPTTokenizer(
         window_sizes=[4, 8, 16, 32],
         dilations=[1, 2, 4],
         stride=1,
         n_segments=4,
         alphabet_size_mean=4,
-        alphabet_size_slope=3,
-        std_threshold=0.001
+        alphabet_size_slope=3
     )
     
-    bow_df = tokenizer.get_rolling_bow_histogram(returns, rolling_window=30, channel_name=ticker)
-    bow_df.index = df.index[:len(bow_df)]
-    bow_df.columns = [f"token_{col}" for col in bow_df.columns]
+    token_df, vocab = tokenizer.fit_transform_series(returns, channel_name=f"{ticker}_ret")
+    bow_df = tokenizer.get_rolling_bow_histogram(returns, rolling_window=30, channel_name=f"{ticker}_ret")
     
-    # Merge datasets
-    combined_df = pd.concat([df[['Target_Dir', 'Return']], tech_feats, bow_df], axis=1).dropna()
+    # Align bow_df and df
+    common_len = min(len(df), len(bow_df))
+    df = df.iloc[-common_len:].copy()
+    bow_df = bow_df.iloc[-common_len:].copy()
+    returns = df['Return'].values
     
-    token_cols = [c for c in combined_df.columns if c.startswith('token_')]
-    freq_token_cols = [c for c in token_cols if combined_df[c].sum() >= 5]
-    tech_cols = tech_feats.columns.tolist()
-    comb_cols = tech_cols + freq_token_cols
+    # Filter frequent tokens (min 5 occurrences)
+    token_counts = (bow_df > 0).sum(axis=0)
+    freq_cols = token_counts[token_counts >= 5].index
+    bow_df = bow_df[freq_cols]
+    print(f"  → Retained {len(freq_cols)} frequent pattern token features for {ticker}.")
     
-    print(f"  → Retained {len(freq_token_cols)} frequent pattern token features.")
+    tech_cols = ['Return', 'Parkinson_Vol', 'Vol_MA30', 'Rel_Volume']
+    X_tech = df[tech_cols].values
+    X_tokens = bow_df.values
+    y = df['Target_Dir'].values
+    dates = df.index
     
-    # Walk-Forward Splits (2016 to 2025)
-    test_years = range(2016, 2026)
+    # Annual test folds: 2016 to 2025
+    test_years = list(range(2016, 2026))
     
-    all_preds = {'Baseline_Tech': [], 'MSOPT_Tokens': [], 'Combined': []}
-    all_trues = []
-    all_returns = []
+    pred_base_all = []
+    pred_msopt_all = []
+    y_test_all = []
+    ret_test_all = []
     
-    for year in test_years:
-        train_mask = (combined_df.index.year < year)
-        test_mask = (combined_df.index.year == year)
+    for test_yr in test_years:
+        train_mask = (dates < f"{test_yr}-01-01") & (dates >= '2010-01-01')
+        test_mask = (dates >= f"{test_yr}-01-01") & (dates <= f"{test_yr}-12-31")
         
-        if not any(test_mask) or not any(train_mask):
+        if test_mask.sum() == 0:
             continue
             
-        train_df = combined_df[train_mask]
-        test_df = combined_df[test_mask]
+        # Fit Baseline
+        clf_base = LGBMClassifier(n_estimators=100, learning_rate=0.05, max_depth=3, random_state=42, verbose=-1)
+        clf_base.fit(X_tech[train_mask], y[train_mask])
+        pred_base = clf_base.predict(X_tech[test_mask])
         
-        y_tr = train_df['Target_Dir']
-        y_te = test_df['Target_Dir']
-        rets_te = test_df['Return'].values
+        # Fit MSOPT Tokens
+        clf_msopt = LGBMClassifier(n_estimators=100, learning_rate=0.05, max_depth=3, random_state=42, verbose=-1)
+        clf_msopt.fit(X_tokens[train_mask], y[train_mask])
+        pred_msopt = clf_msopt.predict(X_tokens[test_mask])
         
-        models_to_test = [
-            ('Baseline_Tech', tech_cols),
-            ('MSOPT_Tokens', freq_token_cols),
-            ('Combined', comb_cols)
-        ]
+        pred_base_all.extend(pred_base)
+        pred_msopt_all.extend(pred_msopt)
+        y_test_all.extend(y[test_mask])
+        ret_test_all.extend(returns[test_mask])
         
-        for name, cols in models_to_test:
-            clf = lgb.LGBMClassifier(
-                n_estimators=50,
-                learning_rate=0.03,
-                num_leaves=15,
-                subsample=0.8,
-                colsample_bytree=0.8,
-                random_state=42,
-                verbose=-1
-            )
-            clf.fit(train_df[cols], y_tr)
-            preds = clf.predict(test_df[cols])
-            
-            all_preds[name].extend(preds)
-            
-        all_trues.extend(y_te.values)
-        all_returns.extend(rets_te)
-        
-    # Overall 10-Year Strategy Summary
-    y_true_arr = np.array(all_trues)
-    rets_arr = np.array(all_returns)
+    pred_base_all = np.array(pred_base_all)
+    pred_msopt_all = np.array(pred_msopt_all)
+    y_test_all = np.array(y_test_all)
+    ret_test_all = np.array(ret_test_all)
     
-    summary_results = []
-    for name in all_preds:
-        preds_arr = np.array(all_preds[name])
-        acc = accuracy_score(y_true_arr, preds_arr)
-        f1 = f1_score(y_true_arr, preds_arr, average='macro')
-        sharpe, sortino, max_dd = compute_real_strategy_metrics(rets_arr, preds_arr, fee_bps=0.0005)
-        
-        summary_results.append({
-            'Ticker': ticker,
-            'Model_Paradigm': name,
-            'OOS_Accuracy': acc,
-            'Macro_F1': f1,
-            'Sharpe_Ratio': sharpe,
-            'Sortino_Ratio': sortino,
-            'Max_Drawdown': max_dd
-        })
-        
-    res_df = pd.DataFrame(summary_results)
-    print(f"\n--- AUTHENTIC 10-YEAR WALK-FORWARD SUMMARY ({ticker}) POST 5 BPS COSTS ---")
+    # Backtest Metrics post 5 bps costs
+    _, m_base = calculate_backtest_metrics(ret_test_all, pred_base_all, fee_bps=5.0)
+    _, m_msopt = calculate_backtest_metrics(ret_test_all, pred_msopt_all, fee_bps=5.0)
+    
+    acc_base = (pred_base_all == y_test_all).mean()
+    acc_msopt = (pred_msopt_all == y_test_all).mean()
+    
+    summary = [
+        {
+            'Asset': ticker,
+            'Model_Paradigm': 'Baseline (Tech Lags)',
+            'OOS_Accuracy': f"{acc_base:.2%}",
+            'Total_Return': f"{m_base['Total_Return']:+.2%}",
+            'Sharpe_Ratio': f"{m_base['Sharpe_Ratio']:.4f}",
+            'Sortino_Ratio': f"{m_base['Sortino_Ratio']:.4f}",
+            'Max_Drawdown': f"{m_base['Max_Drawdown']:.2%}",
+            'Position_Flips': m_base['Total_Trades'],
+            'Tx_Fee_Cost': f"{m_base['Total_Fee_Cost']:.2%}"
+        },
+        {
+            'Asset': ticker,
+            'Model_Paradigm': 'MSOPT Tokens (Ours)',
+            'OOS_Accuracy': f"{acc_msopt:.2%}",
+            'Total_Return': f"{m_msopt['Total_Return']:+.2%}",
+            'Sharpe_Ratio': f"{m_msopt['Sharpe_Ratio']:.4f}",
+            'Sortino_Ratio': f"{m_msopt['Sortino_Ratio']:.4f}",
+            'Max_Drawdown': f"{m_msopt['Max_Drawdown']:.2%}",
+            'Position_Flips': m_msopt['Total_Trades'],
+            'Tx_Fee_Cost': f"{m_msopt['Total_Fee_Cost']:.2%}"
+        }
+    ]
+    
+    res_df = pd.DataFrame(summary)
+    print(f"\n--- {ticker} 10-Year Walk-Forward Summary (2016–2025) ---")
     print(res_df.to_string(index=False))
-    
-    res_df.to_csv(os.path.join(RESULTS_DIR, f"{ticker.lower()}_real_summary.csv"), index=False)
     return res_df
 
-def main():
+def run_master_benchmark():
     all_res = []
-    for ticker in ["SPY", "QQQ", "AAPL", "TLT"]:
-        res = evaluate_ticker_walk_forward(ticker)
-        all_res.append(res)
+    tickers = ["SPY", "QQQ", "AAPL", "TLT"]
+    
+    for ticker in tickers:
+        df_res = run_asset_walk_forward(ticker)
+        all_res.append(df_res)
         
-    full_df = pd.concat(all_res, ignore_index=True)
-    print(f"\n{'='*70}\n  FINAL AUTHENTIC CROSS-ASSET MSOPT SUMMARY (2016-2025 POST 5 BPS COSTS)\n{'='*70}")
-    print(full_df.round(4).to_string(index=False))
-    full_df.to_csv(os.path.join(RESULTS_DIR, "master_real_summary.csv"), index=False)
+    master_df = pd.concat(all_res, ignore_index=True)
+    
+    print(f"\n{'='*80}\n  MASTER 10-YEAR WALK-FORWARD BENCHMARK SUMMARY (2016–2025 POST 5 BPS COSTS)\n{'='*80}")
+    print(master_df.to_string(index=False))
+    
+    results_dir = os.path.join(PROJECT_ROOT, "results")
+    out_csv = os.path.join(results_dir, "master_walkforward_summary.csv")
+    master_df.to_csv(out_csv, index=False)
+    print(f"\n[Output] Saved master summary table to: {out_csv}")
+    return master_df
 
 if __name__ == "__main__":
-    main()
+    run_master_benchmark()
