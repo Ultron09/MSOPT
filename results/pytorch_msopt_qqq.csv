@@ -1,0 +1,2 @@
+Ticker,Model,OOS_Accuracy,Sharpe_Ratio,Sortino_Ratio,Max_Drawdown
+QQQ,PyTorch_MSOPT_ConvTransformer,0.46618933969769294,0.7950868605889738,0.9849903631900386,-0.3511872227135173
