@@ -14,6 +14,8 @@ import yfinance as yf
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
+TICKERS = ["SPY", "QQQ", "AAPL", "TLT"]
+
 def fetch_and_clean_ticker(ticker: str, start: str = "2010-01-01", end: str = "2026-01-01") -> pd.DataFrame:
     """Fetch raw daily OHLCV from Yahoo Finance and clean column names."""
     csv_path = os.path.join(DATA_DIR, f"{ticker.lower()}_daily_real.csv")
@@ -82,6 +84,15 @@ def build_real_features_and_targets(df: pd.DataFrame, horizon: int = 5, delta_vo
     # Drop NaNs created by rolling windows and forward shifts
     clean_out = out.dropna()
     return clean_out
+
+
+build_high_snr_dataset = build_real_features_and_targets
+
+
+def prepare_benchmark_dataset(ticker: str, start: str = "2010-01-01", end: str = "2026-01-01", horizon: int = 5) -> pd.DataFrame:
+    """Convenience loader and preprocessor for ticker benchmark dataset."""
+    raw_df = fetch_and_clean_ticker(ticker, start, end)
+    return build_real_features_and_targets(raw_df, horizon=horizon)
 
 
 if __name__ == "__main__":
