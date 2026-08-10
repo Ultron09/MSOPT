@@ -152,3 +152,32 @@ This document is the official experiment memory log for the Multi-Scale Overlapp
 4. Added methodological caveat noting classifier is LightGBM, not the Conv-Transformer.
 5. Regenerated `paper/MSOPT_Conference_Paper.pdf` with all corrections.
 
+---
+
+## Experiment 7: PyTorch MSOPT Conv-Transformer Multi-Asset Evaluation
+
+- **Date**: 2026-08-09
+- **Script**: `experiments/run_pytorch_benchmarks.py` / `src/models/msopt_engine.py`
+- **Results**: `results/pytorch_msopt_all.csv`, `results/pytorch_msopt_qqq.csv`
+- **Architecture**: 2D Spatial Grid Embedding (12 scales) + Multi-Branch 2D Conv Inception Block + Transformer Sequence Encoder.
+
+### 📊 Empirical PyTorch Benchmark Table:
+
+| Asset | Model Backbone | OOS Accuracy | Sharpe Ratio | Sortino Ratio | Max Drawdown |
+|---|---|---|---|---|---|
+| **SPY** | PyTorch Conv-Transformer | 47.22% | **0.7623** | **0.8945** | **-33.72%** |
+| **QQQ** | PyTorch Conv-Transformer | 46.62% | **0.7951** | **0.9850** | **-35.12%** |
+
+---
+
+## Experiment 8: Comprehensive 4-Day Codebase & Pipeline Verification Milestone
+
+- **Date**: 2026-08-10
+- **Test Scripts**: `tests/test_audit_all.py`, `tests/test_tokenizer_equation_match.py`, `tests/test_backtest_metrics.py`, `tests/test_tokenizer_inspection.py`
+- **Status**: **100% Passed Across All Test Modules**
+
+### 📊 Verification Summary:
+1. **Mathematical Invariance**: §3.1 Receptive field strides, §3.2 1D-SAX bin boundaries, §3.3 2D spatial grid indexing verified with exact hand-calculated assertions.
+2. **Backtest Accounting**: Net return deduction ($R_{net} = p_t R_t - 5\text{ bps} \times |\Delta p_t|$) confirmed with exact financial ledger verification.
+3. **Data Integrity**: SHA-256 checksums verified across SPY, QQQ, AAPL, and TLT raw and cleaned feeds.
+

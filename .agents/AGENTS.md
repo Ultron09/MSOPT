@@ -40,15 +40,20 @@
 |---|---|---|---|
 | **Data Preprocessor** | `src/data/preprocessing.py` | Completed | OHLCV loader, Parkinson volatility, and Fork B high-SNR directional/volatility targets. |
 | **Matrix Profile Diagnostic** | `explore_matrix_profile.py` | Completed | Confirmed motif density peaks at short scales ($w \in [5, 20]$). $d_{norm} \to 1.0$ at $w \ge 50$. |
+| **VALMOD Diagnostic** | `experiments/valmod_diagnostic.py` | Completed | Variable-length motif discovery across $w \in [4, 64]$; validates multi-scale token vocabulary. |
 | **MSOPT Tokenizer** | `src/tokenizer/msopt_tokenizer.py` | Completed | Multi-scale 1D-SAX ($w \in \{4,8,16,32\}, d \in \{1,2,4\}, s=1$), rolling BoW & 2D spatial grid indexing. |
-| **MSOPT PyTorch Engine** | `src/models/msopt_engine.py` | Completed | PyTorch 2D Spatial Grid Embedder + 2D Conv Inception Block + Transformer Encoder. |
+| **PyTorch MSOPT Engine** | `src/models/msopt_engine.py` | Completed | PyTorch 2D Spatial Grid Embedder + 2D Conv Inception Block + Transformer Encoder. |
+| **PatchTST Baseline** | `src/models/patchtst_baseline.py` | Completed | Patch-based channel-independent transformer baseline for financial sequence benchmarking. |
+| **Forensic Audit Suite** | `experiments/forensic_audit.py` | Completed | Ground-truth verification, fee death spiral diagnosis, split audit, and SHA-256 data pinning. |
 | **Benchmark Pipeline** | `experiments/benchmark_pipeline.py` | Completed | 10-year walk-forward evaluation (2016–2026) post 5 bps transaction costs. |
 | **Pillar 1: PyTorch Benchmark** | `experiments/run_pytorch_benchmarks.py` | Completed | Walk-forward PyTorch Conv-Transformer model runner on 2D spatial token grids. |
 | **Pillar 2: Scale Sensitivity** | `experiments/ablation_scale_sensitivity.py` | Completed | Single-scale ($w=4, 16, 32$) vs Multi-scale ($w \in \{4,8,16,32\}$). Multi-scale yields +32.9% Sharpe lift. |
 | **Pillar 3: Stride Invariance** | `experiments/ablation_stride_invariance.py` | Completed | Dense overlapping stride ($s=1$) vs non-overlapping stride ($s=w$). |
 | **Pillar 4: Motif Interpretability** | `experiments/visualize_top_patterns.py` | Completed | Feature importance extraction & price subseries chart motif plotting (`paper/figures/top_pattern_motifs.png`). |
 | **Pillar 5: LaTeX Conference Paper** | `paper/main.tex` | Completed | 8-page IEEE double-column LaTeX manuscript source for submission to ICLR / AAAI / IEEE PAMI. |
-| **Pillar 5: Compiled Paper PDF** | `paper/MSOPT_Conference_Paper.pdf` | Completed | Executive PDF compiled version of the academic conference paper. |
+| **Pillar 5: Executive Paper PDF** | `paper/MSOPT_Conference_Paper.pdf` | Completed | Executive PDF compiled version of the academic conference paper with verified figures and tables. |
+| **Audit & Test Suite** | `tests/test_audit_all.py` | Completed | Automated sanity verification for preprocessor, tokenizer, PyTorch engine, and financial accounting. |
+| **Equation Verification Tests** | `tests/test_tokenizer_equation_match.py` | Completed | Formal mathematical verification of §3.1–§3.3 receptive fields, 1D-SAX, and spatial grids. |
 | **Literature Base** | `research_papers/` | Completed | 8 deep-dive papers & master proposal (`01`–`08`, `INDEX.md`). |
 | **Research Proposal** | `RESEARCH_PROPOSAL.md` | Completed | Official proposal for Universal AI University (Suryaansh Singh & Prof. Shivaji Pawar). |
 
